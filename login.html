@@ -1,0 +1,13 @@
+<!-- forms.html -->
+{{if .Success}}
+	<h1>Thanks for your message!</h1>
+{{else}}
+	<h1>Login</h1>
+	<form method="POST">
+		<label>Client ID:</label><br />
+		<input type="text" name="client-id"><br />
+		<label>Client Secret:</label><br />
+		<input type="text" name="client-secret"><br />
+		<input type="submit">
+	</form>
+{{end}}
