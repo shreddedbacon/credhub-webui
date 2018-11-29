@@ -18,7 +18,8 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o app .
 FROM scratch
 WORKDIR /root/
 COPY --from=builder /go/src/github.com/sb/goweb/app .
-COPY forms.html .
+COPY login.html .
+COPY resolv /etc/resolv.conf
 
 EXPOSE 80
 ENTRYPOINT ["./app"]
