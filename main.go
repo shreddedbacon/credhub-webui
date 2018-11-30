@@ -3,16 +3,17 @@ package main
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/gorilla/sessions"
 	"html/template"
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	//"strings"
 	"os"
 	"bytes"
 	"encoding/json"
 	"time"
+
+  "github.com/gorilla/sessions"
+  "github.com/dgrijalva/jwt-go"
 )
 
 type ClientStruct struct {
@@ -22,6 +23,7 @@ type ClientStruct struct {
 
 type AuthResponse struct {
 	AccessToken     string `json:"access_token"`
+	Expiry int `json:"expires_in"`
 	TokenType string `json:"token_type"`
 	Scope string `json:"scope"`
 	Error string `json:"error"`
@@ -65,7 +67,7 @@ func listCredentials(w http.ResponseWriter, r *http.Request) {
   if ok {
     api_url = api_url+param1[0]
   }
-  access_token := session.Values["access_token"].(string)
+
   // set up netClient for use later
   var netClient = &http.Client{
     Timeout: time.Second * 10,
@@ -73,10 +75,26 @@ func listCredentials(w http.ResponseWriter, r *http.Request) {
   // use template
   tmpl := template.Must(template.ParseFiles("credentials.html", "base.html"))
 	// Check if user is authenticated, forbid if not
-	if auth, ok := session.Values["authenticated"].(bool); !ok || !auth {
-		http.Error(w, "Forbidden", http.StatusForbidden)
-		return
+  auth, _ := session.Values["authenticated"].(bool)
+	if auth == false {
+    w.Header().Set("Content-Type", "text/html; charset=utf-8")
+    fmt.Fprint(w, "<meta http-equiv=\"refresh\" content=\"0;URL='/login'\" />")
+    return
 	}
+  access_token := session.Values["access_token"].(string)
+  //claims := jwt.MapClaims{}
+  var p jwt.Parser
+  token, _, _ := p.ParseUnverified(access_token, &jwt.StandardClaims{})
+  if err := token.Claims.Valid(); err != nil {
+    fmt.Println("invalid")
+  	session.Values["authenticated"] = false
+  	session.Values["access_token"] = ""
+  	session.Save(r, w)
+    w.Header().Set("Content-Type", "text/html; charset=utf-8")
+    fmt.Fprint(w, "<meta http-equiv=\"refresh\" content=\"0;URL='/login'\" />")
+    return
+  }
+
 
   // call the credhub api to get all credentials
   http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //ignore cert for now
@@ -107,21 +125,27 @@ func listCredentials(w http.ResponseWriter, r *http.Request) {
 
 func logout(w http.ResponseWriter, r *http.Request) {
 	session, _ := store.Get(r, cookie_name)
-
+  fmt.Println("logout")
 	// Revoke users authentication
 	session.Values["authenticated"] = false
 	session.Values["access_token"] = ""
 	session.Save(r, w)
-  http.Redirect(w, r, "/", 301)
+  w.Header().Set("Content-Type", "text/html; charset=utf-8")
+  fmt.Fprint(w, "<meta http-equiv=\"refresh\" content=\"0;URL='/login'\" />")
+  return
+  //http.Redirect(w, r, "/login", 301)
 }
 
 func login(w http.ResponseWriter, r *http.Request) {
   session, _ := store.Get(r, cookie_name)
 	tmpl := template.Must(template.ParseFiles("login.html"))
-
   //already authd, render tmpl
-  if session.Values["authenticated"].(bool) == true {
-    tmpl.Execute(w, struct{ Success bool }{true})
+  //if session.Values["authenticated"].(bool) == true {
+  auth, _ := session.Values["authenticated"].(bool)
+  if auth == true {
+    w.Header().Set("Content-Type", "text/html; charset=utf-8")
+    fmt.Fprint(w, "<meta http-equiv=\"refresh\" content=\"0;URL='/'\" />")
+    return
 	}
 
   //if not authd and not a POST, render tmpl
@@ -179,9 +203,20 @@ func login(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	http.HandleFunc("/", login)
-	http.HandleFunc("/credentials", listCredentials)
+	http.HandleFunc("/login", login)
 	http.HandleFunc("/logout", logout)
+	http.HandleFunc("/", listCredentials)
 
-	http.ListenAndServe(":8080", nil)
+	//http.ListenAndServe(":8080", nil)
+  err := http.ListenAndServe(":8080", logRequest(http.DefaultServeMux))
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
+func logRequest(handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Printf("%s %s %s\n", r.RemoteAddr, r.Method, r.URL)
+		handler.ServeHTTP(w, r)
+	})
 }
