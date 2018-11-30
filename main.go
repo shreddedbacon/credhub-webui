@@ -8,7 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"strings"
+	//"strings"
 	"os"
 	"bytes"
 	"encoding/json"
@@ -28,12 +28,20 @@ type AuthResponse struct {
 	ErrorDesc string `json:"error_description"`
 }
 
+type AuthServerResponse struct {
+	AuthServer struct {
+		URL string `json:"url"`
+	} `json:"auth-server"`
+	App struct {
+		Name string `json:"name"`
+	} `json:"app"`
+}
+
 var (
 	// key must be 16, 24 or 32 bytes long (AES-128, AES-192 or AES-256)
 	key         = []byte("super-secret-key")
 	store       = sessions.NewCookieStore(key)
-	auth_server1 = os.Getenv("AUTH_SERVER1")
-	auth_server2 = os.Getenv("AUTH_SERVER2")
+	auth_server = os.Getenv("AUTH_SERVER")
 	cookie_name = "auth-cookie"
 )
 
@@ -49,7 +57,7 @@ func secret(w http.ResponseWriter, r *http.Request) {
 	var netClient = &http.Client{
 		Timeout: time.Second * 10,
 	}
-	req, _ := http.NewRequest("GET", auth_server1+"/api/v1/data?name-like=", bytes.NewBuffer([]byte("")))
+	req, _ := http.NewRequest("GET", auth_server+"/api/v1/data?name-like=", bytes.NewBuffer([]byte("")))
 	access_token := session.Values["access_token"].(string)
 	req.Header.Add("authorization", "bearer "+access_token)
 	req.Header.Set("Content-Type", "application/json")
@@ -82,21 +90,27 @@ func login(w http.ResponseWriter, r *http.Request) {
 	}
 	// do something with details
 	_ = details
-	fmt.Println(details)
+	//fmt.Println(details) //print details for debugging
 
-	// get auth url (this needs to be fixed up a bit because its not really even being used yet to extract the url)
+	// get auth url
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //ignore cert for now
-	resp, err := http.Get(auth_server1 + "/info")
+	resp, err := http.Get(auth_server + "/info")
 	if err != nil {
 		panic(err)
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	fmt.Println("get:\n", string(body))
+	authRespBytes := []byte(body)
+	authResp := AuthServerResponse{}
+  if authServErr := json.Unmarshal([]byte(authRespBytes), &authResp); err != nil {
+    fmt.Println(authServErr)
+  }
+	oauth_server := authResp.AuthServer.URL
 
 	// post auth request
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //ignore cert for now
-	resp, err = http.PostForm(auth_server2+"/oauth/token", url.Values{
+	resp, err = http.PostForm(oauth_server+"/oauth/token", url.Values{
 		"client_id": {details.ClientID},
 		"client_secret": {details.ClientSecret},
 		"grant_type": {"client_credentials"},
