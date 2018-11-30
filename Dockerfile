@@ -16,7 +16,7 @@ RUN apk --no-cache add ca-certificates
 #FROM scratch
 WORKDIR /root/
 COPY --from=builder /go/src/github.com/sb/goweb/app .
-COPY login.html .
+COPY *.html ./
 
 EXPOSE 80
 ENTRYPOINT ["./app"]

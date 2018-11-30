@@ -45,28 +45,64 @@ var (
 	cookie_name = "auth-cookie"
 )
 
-func secret(w http.ResponseWriter, r *http.Request) {
-	session, _ := store.Get(r, cookie_name)
+type CredentialsData struct {
+	Credentials []struct {
+		VersionCreatedAt time.Time `json:"version_created_at"`
+		Name             string    `json:"name"`
+	} `json:"credentials"`
+}
 
-	// Check if user is authenticated
+type CredentialPageData struct {
+	PageTitle string
+	Credentials     []CredentialsData
+}
+
+func listCredentials(w http.ResponseWriter, r *http.Request) {
+  session, _ := store.Get(r, cookie_name)
+  // api call to make
+  api_url := "/api/v1/data?name-like="
+  param1, ok := r.URL.Query()["search"]
+  if ok {
+    api_url = api_url+param1[0]
+  }
+  access_token := session.Values["access_token"].(string)
+  // set up netClient for use later
+  var netClient = &http.Client{
+    Timeout: time.Second * 10,
+  }
+  // use template
+  tmpl := template.Must(template.ParseFiles("credentials.html", "base.html"))
+	// Check if user is authenticated, forbid if not
 	if auth, ok := session.Values["authenticated"].(bool); !ok || !auth {
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
 
-	var netClient = &http.Client{
-		Timeout: time.Second * 10,
-	}
-	req, _ := http.NewRequest("GET", auth_server+"/api/v1/data?name-like=", bytes.NewBuffer([]byte("")))
-	access_token := session.Values["access_token"].(string)
+  // call the credhub api to get all credentials
+  http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //ignore cert for now
+	req, _ := http.NewRequest("GET", auth_server+api_url, bytes.NewBuffer([]byte("")))
 	req.Header.Add("authorization", "bearer "+access_token)
 	req.Header.Set("Content-Type", "application/json")
-	resp, _ := netClient.Do(req)
+	resp, reqErr := netClient.Do(req)
+  if reqErr != nil {
+    fmt.Println(reqErr)
+  	http.Error(w, "Error", http.StatusBadRequest)
+  	return
+  }
 	defer resp.Body.Close()
 	body, _ := ioutil.ReadAll(resp.Body)
-	//fmt.Println("post:\n", string(body))
-	// Print secret message
-	fmt.Fprintln(w, string(body))
+	credRespBytes := []byte(body)
+	credResp := CredentialsData{}
+  if credServErr := json.Unmarshal([]byte(credRespBytes), &credResp); credServErr != nil {
+    fmt.Println(credServErr)
+  }
+  data := CredentialPageData{
+		PageTitle: "Credentials",
+		Credentials: []CredentialsData{
+      credResp,
+    },
+	}
+	tmpl.ExecuteTemplate(w, "base", data)
 }
 
 func logout(w http.ResponseWriter, r *http.Request) {
@@ -76,23 +112,29 @@ func logout(w http.ResponseWriter, r *http.Request) {
 	session.Values["authenticated"] = false
 	session.Values["access_token"] = ""
 	session.Save(r, w)
+  http.Redirect(w, r, "/", 301)
 }
 
 func login(w http.ResponseWriter, r *http.Request) {
+  session, _ := store.Get(r, cookie_name)
 	tmpl := template.Must(template.ParseFiles("login.html"))
+
+  //already authd, render tmpl
+  if session.Values["authenticated"].(bool) == true {
+    tmpl.Execute(w, struct{ Success bool }{true})
+	}
+
+  //if not authd and not a POST, render tmpl
 	if r.Method != http.MethodPost {
 		tmpl.Execute(w, nil)
 		return
 	}
-	details := ClientStruct{
+  // collect credentials from form
+	loginCreds := ClientStruct{
 		ClientID:     r.FormValue("client-id"),
 		ClientSecret: r.FormValue("client-secret"),
 	}
-	// do something with details
-	_ = details
-	//fmt.Println(details) //print details for debugging
-
-	// get auth url
+	// get auth url from server
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //ignore cert for now
 	resp, err := http.Get(auth_server + "/info")
 	if err != nil {
@@ -100,7 +142,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
-	fmt.Println("get:\n", string(body))
+	//fmt.Println("get:\n", string(body))
 	authRespBytes := []byte(body)
 	authResp := AuthServerResponse{}
   if authServErr := json.Unmarshal([]byte(authRespBytes), &authResp); err != nil {
@@ -111,8 +153,8 @@ func login(w http.ResponseWriter, r *http.Request) {
 	// post auth request
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //ignore cert for now
 	resp, err = http.PostForm(oauth_server+"/oauth/token", url.Values{
-		"client_id": {details.ClientID},
-		"client_secret": {details.ClientSecret},
+		"client_id": {loginCreds.ClientID},
+		"client_secret": {loginCreds.ClientSecret},
 		"grant_type": {"client_credentials"},
 		"response_type": {"token"},
 	})
@@ -121,16 +163,13 @@ func login(w http.ResponseWriter, r *http.Request) {
 	}
 	defer resp.Body.Close()
 	body, err = ioutil.ReadAll(resp.Body)
-	fmt.Println("post:\n", string(body))
+	//fmt.Println("post:\n", string(body))
 	textBytes := []byte(body)
 	list := AuthResponse{}
   if err := json.Unmarshal([]byte(textBytes), &list); err != nil {
     fmt.Println(err)
   }
-	fmt.Println(list)
-	session, _ := store.Get(r, cookie_name)
 	// Authentication goes here
-	// ...
 	// Set user as authenticated
 	session.Values["authenticated"] = true
 	session.Values["access_token"] = list.AccessToken
@@ -141,7 +180,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	http.HandleFunc("/", login)
-	http.HandleFunc("/secret", secret)
+	http.HandleFunc("/credentials", listCredentials)
 	http.HandleFunc("/logout", logout)
 
 	http.ListenAndServe(":8080", nil)
