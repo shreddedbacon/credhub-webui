@@ -61,17 +61,17 @@
               <a class="dropdown-item" href="/new/rsa">RSA</a>
               <a class="dropdown-item" href="/new/ssh">SSH</a>
             </div>
-          </li>
+          </li-->
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="http://example.com" id="dropdown01" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Generate Credential</a>
             <div class="dropdown-menu" aria-labelledby="dropdown01">
-            <a class="dropdown-item" href="/generate/password">Password</a>
-            <a class="dropdown-item" href="/generate/user">User</a>
-            <a class="dropdown-item" href="/generate/certificate">Certificate</a>
+            <a class="dropdown-item btn-action" href="/generate/pass" data-url="/generate/pass" data-target="#generate-modal" data-toggle="modal">Password</a>
+            <a class="dropdown-item btn-action" href="/generate/user" data-url="/generate/user" data-target="#generate-modal" data-toggle="modal">User</a>
+            <a class="dropdown-item btn-action" href="/generate/certificate" data-url="/generate/certificate" data-target="#generate-modal" data-toggle="modal">Certificate</a>
             <a class="dropdown-item" href="/generate/rsa">RSA</a>
             <a class="dropdown-item" href="/generate/ssh">SSH</a>
             </div>
-          </li-->
+          </li>
         </ul>
         <ul class="navbar-nav justify-content-end">
           <li class="nav-item">
@@ -90,7 +90,12 @@
     <main role="main" class="container-fluid">
       {{template "content" .}}
     </main><!-- /.container -->
-
+    <div class="modal fade" id="generate-modal">
+      <div class="modal-dialog">
+        <div class="modal-content gen-modal">
+        </div>
+      </div>
+    </div>
     <!-- Bootstrap core JavaScript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
@@ -98,7 +103,7 @@
     <script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery-slim.min.js"><\/script>')</script>
     <script src="../../assets/js/vendor/popper.min.js"></script>
     <script src="../../dist/js/bootstrap.min.js"></script--->
-    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
 
@@ -106,6 +111,22 @@
     $(document).ready(function () {
       $('#confirm-delete').on('show.bs.modal', function(e) {
         $(this).find('.btn-ok').attr('href', $(e.relatedTarget).data('href'));
+      });
+      $('#generate-modal').on('show.bs.modal', function(e) {
+        var button = $(e.relatedTarget);
+        var modal = $(this);
+        // or, load content from value of data-remote url
+        modal.find('.gen-modal').load(button.data("url"));
+      });
+      $('.custom-control-input').on('change', evt => {
+        var target = $(event.target);
+        if (target.is('input')) {
+          if(target.is(":checked") == true) {
+          target.attr("checked", "checked");
+          } else {
+          target.attr("checked", false);
+          }
+        }
       });
     });
     </script>
