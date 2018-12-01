@@ -66,7 +66,12 @@
 	<meta http-equiv="refresh" content="0;URL='/'" />
 {{else}}
 	<form method="POST" class="form-signin">
-    <h1 class="h3 mb-3 font-weight-normal">Sign In</h1>
+    <h1 class="h3 mb-3 font-weight-normal">CredHub Sign In</h1>
+    {{if .Flash}}
+    <div class="alert alert-warning" role="alert">
+      {{.Flash}}
+    </div>
+    {{end}}
     <label for="client-id" class="sr-only">Client ID</label>
     <input type="text" name="client-id" id="client-id" class="form-control" placeholder="Client ID" required autofocus>
 		<label for="client-secret" class="sr-only">Client Secret</label>
