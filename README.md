@@ -1,7 +1,18 @@
 # CredHub Web Interface
 
-A web interface for performing basic functions with CredHub, uses `client_id` and `client_secret` currently
+A web interface for performing basic functions with CredHub.
 
+## Log in
+You need to log in with valid Credentials
+Currently supports:
+* `client_id`
+* `client_secret`
+
+## Features
+Currently supports:
+* View
+* Delete
+* Search
 
 # Build
 ```
