@@ -9,7 +9,6 @@ import (
 	"encoding/json"
   "time"
   "bytes"
-  //"strings"
 )
 
 
@@ -22,6 +21,10 @@ type GetCredential struct {
 	} `json:"data"`
 }
 
+type GetCredentialPageData struct {
+	PageTitle string
+	Credentials     []GetCredentialData
+}
 type GetCredentialData struct {
 	Data []struct {
 		Type             string    `json:"type"`
@@ -32,14 +35,25 @@ type GetCredentialData struct {
 	} `json:"data"`
 }
 
+
+type GetCredentialPageDataJson struct {
+	PageTitle string
+	Credentials     []GetCredentialJson
+}
+
 type GetCredentialJson struct {
 	Data []struct {
 		Type             string    `json:"type"`
 		VersionCreatedAt time.Time `json:"version_created_at"`
 		ID               string    `json:"id"`
 		Name             string    `json:"name"`
-		Value            interface{} `json:"value"`
+		Value            map[string]interface{} `json:"value"`
 	} `json:"data"`
+}
+
+type GetCredentialPageDataSSH struct {
+	PageTitle string
+	Credentials     []GetCredentialSSH
 }
 
 type GetCredentialSSH struct {
@@ -56,41 +70,45 @@ type GetCredentialSSH struct {
 	} `json:"data"`
 }
 
-type GetCredentialPageData struct {
+type GetCredentialPageDataUser struct {
 	PageTitle string
-	Credentials     []GetCredentialData
+	Credentials     []GetCredentialUser
 }
 
-type GetCredentialPageDataSSH struct {
-	PageTitle string
-	Credentials     []GetCredentialSSH
-}
-
-type GetCredentialPageDataJson struct {
-	PageTitle string
-	Credentials     []GetCredentialJson
-	JSONData     interface{}
-	JSONData2     string
-}
-/*
-type GetCredentialData struct {
+type GetCredentialUser struct {
 	Data []struct {
 		Type             string    `json:"type"`
 		VersionCreatedAt time.Time `json:"version_created_at"`
 		ID               string    `json:"id"`
 		Name             string    `json:"name"`
 		Value            struct {
-			PublicKey    string `json:"public_key"`
-			PrivateKey   string `json:"private_key"`
-      PublicKeyFingerprint string `json:"public_key_fingerprint"`
-			Username     string `json:"username"`
-			Password     string `json:"password"`
-			Ca           string `json:"ca"`
-			Certificate  string `json:"certificate"`
-			PasswordHash string `json:"password_hash"`
+			UserName    string `json:"username"`
+			PassWord   string `json:"password"`
+      PassWordHash string `json:"password_hash"`
 		} `json:"value"`
 	} `json:"data"`
-}*/
+}
+
+type GetCredentialPageDataCert struct {
+	PageTitle string
+	Credentials     []GetCredentialCert
+}
+
+type GetCredentialCert struct {
+	Data []struct {
+		Type             string    `json:"type"`
+		VersionCreatedAt time.Time `json:"version_created_at"`
+		ID               string    `json:"id"`
+		Name             string    `json:"name"`
+		Value            struct {
+			CA    string `json:"ca"`
+			Certificate   string `json:"certificate"`
+      PrivateKey string `json:"private_key"`
+		} `json:"value"`
+	} `json:"data"`
+}
+
+
 func GetCredentials(w http.ResponseWriter, r *http.Request) {
   session, _ := store.Get(r, cookie_name)
   // api call to make
@@ -100,8 +118,6 @@ func GetCredentials(w http.ResponseWriter, r *http.Request) {
   if ok {
     api_query = api_query+param1[0]
   }
-
-  // use template
 
 	// Check if user is authenticated
   ValidateAuthSessionFalse(session, w, r)
@@ -140,93 +156,78 @@ func GetCredentials(w http.ResponseWriter, r *http.Request) {
       if credServErr := json.Unmarshal([]byte(credRespBytes), &credRespSSH); credServErr != nil {
         fmt.Println(credServErr)
       }
-      data2 := GetCredentialPageDataSSH{
-    		PageTitle: "Get Credential",
+      data := GetCredentialPageDataSSH{
+    		PageTitle: "RSA Credential",
     		Credentials: []GetCredentialSSH{
           credRespSSH,
         },
     	}
       tmpl := template.Must(template.ParseFiles("templates/get_credential_rsa.html", "templates/base.html"))
-    	tmpl.ExecuteTemplate(w, "base", data2)
+    	tmpl.ExecuteTemplate(w, "base", data)
       return
     case "ssh":
     	credRespSSH := GetCredentialSSH{}
       if credServErr := json.Unmarshal([]byte(credRespBytes), &credRespSSH); credServErr != nil {
         fmt.Println(credServErr)
       }
-      data2 := GetCredentialPageDataSSH{
-    		PageTitle: "Get Credential",
+      data := GetCredentialPageDataSSH{
+    		PageTitle: "SSH Credential",
     		Credentials: []GetCredentialSSH{
           credRespSSH,
         },
     	}
       tmpl := template.Must(template.ParseFiles("templates/get_credential_ssh.html", "templates/base.html"))
-    	tmpl.ExecuteTemplate(w, "base", data2)
+    	tmpl.ExecuteTemplate(w, "base", data)
       return
     case "certificate":
-    	credRespdata := GetCredentialData{}
-      if credServErr := json.Unmarshal([]byte(credRespBytes), &credRespdata); credServErr != nil {
+    	credRespCert := GetCredentialCert{}
+      if credServErr := json.Unmarshal([]byte(credRespBytes), &credRespCert); credServErr != nil {
         fmt.Println(credServErr)
       }
-      data := GetCredentialPageData{
-    		PageTitle: "Get Credential",
-    		Credentials: []GetCredentialData{
-          credRespdata,
+      data := GetCredentialPageDataCert{
+    		PageTitle: "Certificate Credential",
+    		Credentials: []GetCredentialCert{
+          credRespCert,
         },
     	}
-      tmpl := template.Must(template.ParseFiles("templates/get_credential.html", "templates/base.html"))
+      tmpl := template.Must(template.ParseFiles("templates/get_credential_certificate.html", "templates/base.html"))
     	tmpl.ExecuteTemplate(w, "base", data)
       return
     case "user":
-    	credRespdata := GetCredentialData{}
-      if credServErr := json.Unmarshal([]byte(credRespBytes), &credRespdata); credServErr != nil {
+    	credRespUser := GetCredentialUser{}
+      if credServErr := json.Unmarshal([]byte(credRespBytes), &credRespUser); credServErr != nil {
         fmt.Println(credServErr)
       }
-      data := GetCredentialPageData{
-    		PageTitle: "Get Credential",
-    		Credentials: []GetCredentialData{
-          credRespdata,
+      data := GetCredentialPageDataUser{
+    		PageTitle: "User Credential",
+    		Credentials: []GetCredentialUser{
+          credRespUser,
         },
     	}
-      tmpl := template.Must(template.ParseFiles("templates/get_credential.html", "templates/base.html"))
+      tmpl := template.Must(template.ParseFiles("templates/get_credential_user.html", "templates/base.html"))
     	tmpl.ExecuteTemplate(w, "base", data)
       return
     case "json":
-
     	credRespJson := GetCredentialJson{}
       if credServErr := json.Unmarshal([]byte(credRespBytes), &credRespJson); credServErr != nil {
         fmt.Println(credServErr)
       }
-      JSONDataBytes := []byte("")
-      var f interface{}
-      for _, cred := range credRespJson.Data {
-        JSONDataBytes, _ = json.Marshal(cred.Value)
-        if err := json.Unmarshal(JSONDataBytes, &f); err != nil {
-      		panic(err)
-      	}
-        //fmt.Println(string(JSONDataBytes))
-      }
-      JSONDataString, _ := json.MarshalIndent(f, "", "  ")
-      JSONDataString2 := string(JSONDataString)
       data3 := GetCredentialPageDataJson{
-    		PageTitle: "Get Credential",
+    		PageTitle: "JSON Credential",
     		Credentials: []GetCredentialJson{
           credRespJson,
         },
-        JSONData: f,
-        JSONData2: JSONDataString2,
     	}
       tmpl := template.Must(template.ParseFiles("templates/get_credential_json.html", "templates/base.html"))
     	tmpl.ExecuteTemplate(w, "base", data3)
       return
-
     default:
     	credRespdata := GetCredentialData{}
       if credServErr := json.Unmarshal([]byte(credRespBytes), &credRespdata); credServErr != nil {
         fmt.Println(credServErr)
       }
       data := GetCredentialPageData{
-    		PageTitle: "Get Credential",
+    		PageTitle: "Other Credential",
     		Credentials: []GetCredentialData{
           credRespdata,
         },
@@ -236,17 +237,8 @@ func GetCredentials(w http.ResponseWriter, r *http.Request) {
       return
     }
   }
-  credRespdata := GetCredentialData{}
-  if credServErr := json.Unmarshal([]byte(credRespBytes), &credRespdata); credServErr != nil {
-    fmt.Println(credServErr)
-  }
-  data := GetCredentialPageData{
-    PageTitle: "Get Credential",
-    Credentials: []GetCredentialData{
-      credRespdata,
-    },
-  }
-  tmpl := template.Must(template.ParseFiles("templates/get_credential.html", "templates/base.html"))
-	tmpl.ExecuteTemplate(w, "base", data)
+  // go home if no conditions met
+  w.Header().Set("Content-Type", "text/html; charset=utf-8")
+  fmt.Fprint(w, "<meta http-equiv=\"refresh\" content=\"0;URL='/'\" />")
   return
 }
