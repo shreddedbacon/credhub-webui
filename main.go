@@ -99,7 +99,7 @@ func ListCredentials(w http.ResponseWriter, r *http.Request) {
     fmt.Println(credServErr)
   }
   data := CredentialPageData{
-		PageTitle: "Credentials",
+		PageTitle: "List Credentials",
 		Credentials: []CredentialsData{
       credResp,
     },
@@ -116,6 +116,7 @@ func main() {
 	http.HandleFunc("/logout", Logout)
 	http.HandleFunc("/", ListCredentials)
 	http.HandleFunc("/get", GetCredentials)
+	http.HandleFunc("/delete", DeleteCredentials)
   http.HandleFunc("/favicon.ico", FaviconHandler)
 
 	//http.ListenAndServe(":8080", nil)
