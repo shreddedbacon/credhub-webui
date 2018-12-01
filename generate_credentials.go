@@ -141,6 +141,33 @@ func GenerateCredentials(w http.ResponseWriter, r *http.Request) {
         Parameters: params,
       }
       PostCredentials(w, passw, access_token)
+    case "rsa":
+      cred_name := r.FormValue("name")
+      r.ParseForm()
+      //add to struct
+      params := PasswordParameters{}
+      //create payload
+      passw := PasswordStruct{
+        Name: cred_name,
+        Type: "rsa",
+        Parameters: params,
+      }
+      PostCredentials(w, passw, access_token)
+    case "ssh":
+      cred_name := r.FormValue("name")
+      r.ParseForm()
+      ssh_comment := strings.Join(r.Form["ssh_comment"],"")
+      //add to struct
+      params := PasswordParameters{
+        SSHComment: ssh_comment,
+      }
+      //create payload
+      passw := PasswordStruct{
+        Name: cred_name,
+        Type: "ssh",
+        Parameters: params,
+      }
+      PostCredentials(w, passw, access_token)
     default:
       RedirectHome(w)
       return
@@ -149,26 +176,26 @@ func GenerateCredentials(w http.ResponseWriter, r *http.Request) {
     fmt.Fprint(w, "<meta http-equiv=\"refresh\" content=\"0;URL='/'\" />")
     return
 	} else {
-    switch credtype {
-    case "pass":
-      tmpl := template.Must(template.ParseFiles("templates/generate/password.html"))
+    if stringInSlice(credtype, []string{"password", "user", "certifcate", "sa", "ssh"}) {
+      tmpl := template.Must(template.ParseFiles("templates/generate/"+credtype+".html"))
       tmpl.ExecuteTemplate(w, "base", nil)
       return
-    case "user":
-      tmpl := template.Must(template.ParseFiles("templates/generate/user.html"))
-      tmpl.ExecuteTemplate(w, "base", nil)
-      return
-    case "certificate":
-      tmpl := template.Must(template.ParseFiles("templates/generate/certificate.html"))
-      tmpl.ExecuteTemplate(w, "base", nil)
-      return
-    default:
+    } else {
       ReturnBlank(w)
       return
     }
   }
   ReturnBlank(w)
   return
+}
+
+func stringInSlice(a string, list []string) bool {
+    for _, b := range list {
+        if b == a {
+            return true
+        }
+    }
+    return false
 }
 
 func PostCredentials(w http.ResponseWriter, credential PasswordStruct, access_token string) {
@@ -178,7 +205,6 @@ func PostCredentials(w http.ResponseWriter, credential PasswordStruct, access_to
   }
   http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //ignore cert for now
   jsonStr, _ := json.Marshal(credential)
-  fmt.Println(string(jsonStr))
   req, _ := http.NewRequest("POST", credhub_server+api_query, bytes.NewBuffer(jsonStr))
   req.Header.Add("authorization", "bearer "+access_token)
   req.Header.Set("Content-Type", "application/json")
