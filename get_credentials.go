@@ -162,7 +162,7 @@ func GetCredentials(w http.ResponseWriter, r *http.Request) {
           credRespSSH,
         },
     	}
-      tmpl := template.Must(template.ParseFiles("templates/get_credential_rsa.html", "templates/base.html"))
+      tmpl := template.Must(template.ParseFiles("templates/getcredentials/rsa.html", "templates/base.html"))
     	tmpl.ExecuteTemplate(w, "base", data)
       return
     case "ssh":
@@ -176,7 +176,7 @@ func GetCredentials(w http.ResponseWriter, r *http.Request) {
           credRespSSH,
         },
     	}
-      tmpl := template.Must(template.ParseFiles("templates/get_credential_ssh.html", "templates/base.html"))
+      tmpl := template.Must(template.ParseFiles("templates/getcredentials/ssh.html", "templates/base.html"))
     	tmpl.ExecuteTemplate(w, "base", data)
       return
     case "certificate":
@@ -190,7 +190,7 @@ func GetCredentials(w http.ResponseWriter, r *http.Request) {
           credRespCert,
         },
     	}
-      tmpl := template.Must(template.ParseFiles("templates/get_credential_certificate.html", "templates/base.html"))
+      tmpl := template.Must(template.ParseFiles("templates/getcredentials/certificate.html", "templates/base.html"))
     	tmpl.ExecuteTemplate(w, "base", data)
       return
     case "user":
@@ -204,7 +204,7 @@ func GetCredentials(w http.ResponseWriter, r *http.Request) {
           credRespUser,
         },
     	}
-      tmpl := template.Must(template.ParseFiles("templates/get_credential_user.html", "templates/base.html"))
+      tmpl := template.Must(template.ParseFiles("templates/getcredentials/user.html", "templates/base.html"))
     	tmpl.ExecuteTemplate(w, "base", data)
       return
     case "json":
@@ -218,7 +218,7 @@ func GetCredentials(w http.ResponseWriter, r *http.Request) {
           credRespJson,
         },
     	}
-      tmpl := template.Must(template.ParseFiles("templates/get_credential_json.html", "templates/base.html"))
+      tmpl := template.Must(template.ParseFiles("templates/getcredentials/json.html", "templates/base.html"))
     	tmpl.ExecuteTemplate(w, "base", data3)
       return
     default:
@@ -232,13 +232,12 @@ func GetCredentials(w http.ResponseWriter, r *http.Request) {
           credRespdata,
         },
     	}
-      tmpl := template.Must(template.ParseFiles("templates/get_credential.html", "templates/base.html"))
+      tmpl := template.Must(template.ParseFiles("templates/getcredentials/credential.html", "templates/base.html"))
     	tmpl.ExecuteTemplate(w, "base", data)
       return
     }
   }
   // go home if no conditions met
-  w.Header().Set("Content-Type", "text/html; charset=utf-8")
-  fmt.Fprint(w, "<meta http-equiv=\"refresh\" content=\"0;URL='/'\" />")
+  RedirectHome(w)
   return
 }

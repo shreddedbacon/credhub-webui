@@ -126,8 +126,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	session.Values["authenticated"] = false
 	session.Values["access_token"] = ""
 	session.Save(r, w)
-  w.Header().Set("Content-Type", "text/html; charset=utf-8")
-  fmt.Fprint(w, "<meta http-equiv=\"refresh\" content=\"0;URL='/login'\" />")
+  RedirectLogin(w)
   return
 }
 
@@ -139,8 +138,7 @@ func ValidateAuthToken(session *sessions.Session, access_token string, w http.Re
   	session.Values["authenticated"] = false
   	session.Values["access_token"] = ""
   	session.Save(r, w)
-    w.Header().Set("Content-Type", "text/html; charset=utf-8")
-    fmt.Fprint(w, "<meta http-equiv=\"refresh\" content=\"0;URL='/login'\" />")
+    RedirectLogin(w)
     return
   }
   return
@@ -149,8 +147,7 @@ func ValidateAuthToken(session *sessions.Session, access_token string, w http.Re
 func ValidateAuthSessionFalse(session *sessions.Session, w http.ResponseWriter, r *http.Request) {
   auth, _ := session.Values["authenticated"].(bool)
   if auth == false {
-    w.Header().Set("Content-Type", "text/html; charset=utf-8")
-    fmt.Fprint(w, "<meta http-equiv=\"refresh\" content=\"0;URL='/login'\" />")
+    RedirectLogin(w)
     return
   }
   return
@@ -160,8 +157,7 @@ func ValidateAuthSessionFalse(session *sessions.Session, w http.ResponseWriter, 
 func ValidateAuthSessionTrue(session *sessions.Session, w http.ResponseWriter, r *http.Request) {
   auth, _ := session.Values["authenticated"].(bool)
   if auth == true {
-    w.Header().Set("Content-Type", "text/html; charset=utf-8")
-    fmt.Fprint(w, "<meta http-equiv=\"refresh\" content=\"0;URL='/'\" />")
+    RedirectHome(w)
     return
   }
   return
