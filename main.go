@@ -12,6 +12,7 @@ import (
 	"time"
 
   "github.com/gorilla/sessions"
+  "github.com/gorilla/mux"
 )
 
 type ClientStruct struct {
@@ -107,21 +108,38 @@ func ListCredentials(w http.ResponseWriter, r *http.Request) {
 	tmpl.ExecuteTemplate(w, "base", data)
 }
 
+func ReturnBlank(w http.ResponseWriter) {
+  w.Header().Set("Content-Type", "text/html; charset=utf-8")
+  fmt.Fprint(w, "")
+}
+
+func RedirectHome(w http.ResponseWriter) {
+  w.Header().Set("Content-Type", "text/html; charset=utf-8")
+  fmt.Fprint(w, "<meta http-equiv=\"refresh\" content=\"0;URL='/'\" />")
+}
+
+func RedirectLogin(w http.ResponseWriter) {
+  w.Header().Set("Content-Type", "text/html; charset=utf-8")
+  fmt.Fprint(w, "<meta http-equiv=\"refresh\" content=\"0;URL='/login'\" />")
+}
+
 func FaviconHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "favicon.ico")
 }
 
 func main() {
-	http.HandleFunc("/login", Login)
-	http.HandleFunc("/logout", Logout)
-	http.HandleFunc("/", ListCredentials)
-	http.HandleFunc("/get", GetCredentials)
-	http.HandleFunc("/delete", DeleteCredentials)
-  http.HandleFunc("/favicon.ico", FaviconHandler)
+  r := mux.NewRouter()
+	r.HandleFunc("/login", Login)
+	r.HandleFunc("/logout", Logout)
+	r.HandleFunc("/get", GetCredentials)
+	r.HandleFunc("/delete", DeleteCredentials)
+	r.HandleFunc("/generate/{credtype}", GenerateCredentials)
+  r.HandleFunc("/favicon.ico", FaviconHandler)
+	r.HandleFunc("/", ListCredentials)
 
 	//http.ListenAndServe(":8080", nil)
   //err := http.ListenAndServe(":8080", LogRequest(http.DefaultServeMux))
-  err := http.ListenAndServeTLS(":8443", "server.crt", "server.key", LogRequest(http.DefaultServeMux))
+  err := http.ListenAndServeTLS(":8443", "server.crt", "server.key", LogRequest(r))
 	if err != nil {
 		fmt.Println(err)
 	}
