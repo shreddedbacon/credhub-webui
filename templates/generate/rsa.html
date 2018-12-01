@@ -1,0 +1,31 @@
+{{define "base"}}
+    <div class="modal-header">
+        Generate RSA Key
+    </div>
+    <div class="modal-body">
+      <form action="/generate/rsa" method="post">
+        <div class="form-group">
+          <label for="name" class="col-form-label">Name</label>
+          <input type="text" class="form-control" id="name" name="name" placeholder="/example-name" required autofocus>
+        </div>
+        <button type="submit" class="btn btn-success">Generate</button>
+      </form>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+    </div>
+    <script>
+    $(document).ready(function () {
+      $('.custom-control-input').on('change', evt => {
+        var target = $(event.target);
+        if (target.is('input')) {
+          if(target.is(":checked") == true) {
+          target.attr("checked", "checked");
+          } else {
+          target.attr("checked", false);
+          }
+        }
+      });
+    });
+    </script>
+{{end}}
