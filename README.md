@@ -12,7 +12,22 @@ Currently supports:
 Currently supports:
 * View
 * Delete
+* Generate
 * Search
+
+# Screenshots
+Sign in
+![sign in](https://github.com/shreddedbacon/credhub-webui/blob/master/screenshots/01-sign_in.png)
+List all credentials in CredHub
+![list creds](https://github.com/shreddedbacon/credhub-webui/blob/master/screenshots/01-list_creds.png)
+Search credentials by using a search term, it uses `name-like` from CredHub
+![search creds](https://github.com/shreddedbacon/credhub-webui/blob/master/screenshots/03-search-creds.png)
+View a selected credential
+![view cred](https://github.com/shreddedbacon/credhub-webui/blob/master/screenshots/04-view_cred.png)
+Generate a credential
+![generate cred](https://github.com/shreddedbacon/credhub-webui/blob/master/screenshots/05-generate_cred.png)
+View a generated credential
+![view generated](https://github.com/shreddedbacon/credhub-webui/blob/master/screenshots/06-view_generated.png)
 
 # Build
 ```
