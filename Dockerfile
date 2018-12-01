@@ -16,7 +16,7 @@ RUN apk --no-cache add ca-certificates openssl
 WORKDIR /root/
 RUN openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=localhost"  -keyout server.key  -out server.crt
 COPY --from=builder /go/src/github.com/sb/goweb/app .
-COPY *.html ./
+COPY templates/ templates
 RUN touch favicon.ico
 
 EXPOSE 8443
