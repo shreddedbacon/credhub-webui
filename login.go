@@ -13,6 +13,16 @@ import (
   "github.com/dgrijalva/jwt-go"
 )
 
+type LoginStruct struct {
+	Success bool
+	Flash   string
+}
+
+type Flash struct {
+    Type    string
+    Message string
+}
+
 func Login(w http.ResponseWriter, r *http.Request) {
   session, _ := store.Get(r, cookie_name)
 	tmpl := template.Must(template.ParseFiles("templates/login.html"))
@@ -65,13 +75,48 @@ func Login(w http.ResponseWriter, r *http.Request) {
   if err := json.Unmarshal([]byte(textBytes), &list); err != nil {
     fmt.Println(err)
   }
-	// Authentication goes here
-	// Set user as authenticated
-	session.Values["authenticated"] = true
-	session.Values["access_token"] = list.AccessToken
-	session.Save(r, w)
-
-	tmpl.Execute(w, struct{ Success bool }{true})
+  if list.Error != "" {
+    flash := Flash{
+        Type:    "notice",
+        Message: list.ErrorDesc,
+    }
+    session.AddFlash(flash)
+  }
+  if list.Error == "" {
+  	// Authentication goes here
+  	// Set user as authenticated
+  	session.Values["authenticated"] = true
+  	session.Values["access_token"] = list.AccessToken
+  	session.Save(r, w)
+    flashes := session.Flashes()
+    if len(flashes) > 0 {
+      flash := flashes[0].(Flash)
+      response := LoginStruct{
+        Success: true,
+        Flash: flash.Message,
+      }
+      tmpl.Execute(w, response)
+      return
+    }
+    response := LoginStruct{
+      Success: true,
+    }
+    tmpl.Execute(w, response)
+    return
+  }
+  flashes := session.Flashes()
+  if len(flashes) > 0 {
+      flash := flashes[0].(Flash)
+      response := LoginStruct{
+        Flash: flash.Message,
+      }
+      tmpl.Execute(w, response)
+      return
+  } else {
+    tmpl.Execute(w, nil)
+    return
+  }
+  tmpl.Execute(w, nil)
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {
