@@ -19,7 +19,7 @@ Currently supports:
 Sign in
 ![sign in](https://github.com/shreddedbacon/credhub-webui/blob/master/screenshots/01-sign_in.png)
 List all credentials in CredHub
-![list creds](https://github.com/shreddedbacon/credhub-webui/blob/master/screenshots/01-list_creds.png)
+![list creds](https://github.com/shreddedbacon/credhub-webui/blob/master/screenshots/02-list_creds.png)
 Search credentials by using a search term, it uses `name-like` from CredHub
 ![search creds](https://github.com/shreddedbacon/credhub-webui/blob/master/screenshots/03-search-creds.png)
 View a selected credential
