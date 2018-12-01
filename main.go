@@ -43,7 +43,7 @@ var (
 	// key must be 16, 24 or 32 bytes long (AES-128, AES-192 or AES-256)
 	key         = []byte("super-secret-key")
 	store       = sessions.NewCookieStore(key)
-	auth_server = os.Getenv("AUTH_SERVER")
+	credhub_server = os.Getenv("CREDHUB_SERVER")
 	cookie_name = "auth-cookie"
 )
 
@@ -59,46 +59,33 @@ type CredentialPageData struct {
 	Credentials     []CredentialsData
 }
 
-func listCredentials(w http.ResponseWriter, r *http.Request) {
+func ListCredentials(w http.ResponseWriter, r *http.Request) {
   session, _ := store.Get(r, cookie_name)
   // api call to make
-  api_url := "/api/v1/data?name-like="
+  api_query := "/api/v1/data?name-like="
+  //if we get a search query, add it to the api_query
   param1, ok := r.URL.Query()["search"]
   if ok {
-    api_url = api_url+param1[0]
+    api_query = api_query+param1[0]
   }
 
+
+  // use template
+  tmpl := template.Must(template.ParseFiles("credentials.html", "base.html"))
+	// Check if user is authenticated
+  ValidateAuthSessionFalse(session, w, r)
+  access_token := session.Values["access_token"].(string)
+
+  //validate token
+  ValidateAuthToken(session, access_token, w, r)
+
+  // call the credhub api to get all credentials
   // set up netClient for use later
   var netClient = &http.Client{
     Timeout: time.Second * 10,
   }
-  // use template
-  tmpl := template.Must(template.ParseFiles("credentials.html", "base.html"))
-	// Check if user is authenticated, forbid if not
-  auth, _ := session.Values["authenticated"].(bool)
-	if auth == false {
-    w.Header().Set("Content-Type", "text/html; charset=utf-8")
-    fmt.Fprint(w, "<meta http-equiv=\"refresh\" content=\"0;URL='/login'\" />")
-    return
-	}
-  access_token := session.Values["access_token"].(string)
-  //claims := jwt.MapClaims{}
-  var p jwt.Parser
-  token, _, _ := p.ParseUnverified(access_token, &jwt.StandardClaims{})
-  if err := token.Claims.Valid(); err != nil {
-    fmt.Println("invalid")
-  	session.Values["authenticated"] = false
-  	session.Values["access_token"] = ""
-  	session.Save(r, w)
-    w.Header().Set("Content-Type", "text/html; charset=utf-8")
-    fmt.Fprint(w, "<meta http-equiv=\"refresh\" content=\"0;URL='/login'\" />")
-    return
-  }
-
-
-  // call the credhub api to get all credentials
   http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //ignore cert for now
-	req, _ := http.NewRequest("GET", auth_server+api_url, bytes.NewBuffer([]byte("")))
+	req, _ := http.NewRequest("GET", credhub_server+api_query, bytes.NewBuffer([]byte("")))
 	req.Header.Add("authorization", "bearer "+access_token)
 	req.Header.Set("Content-Type", "application/json")
 	resp, reqErr := netClient.Do(req)
@@ -123,7 +110,7 @@ func listCredentials(w http.ResponseWriter, r *http.Request) {
 	tmpl.ExecuteTemplate(w, "base", data)
 }
 
-func logout(w http.ResponseWriter, r *http.Request) {
+func Logout(w http.ResponseWriter, r *http.Request) {
 	session, _ := store.Get(r, cookie_name)
   fmt.Println("logout")
 	// Revoke users authentication
@@ -133,20 +120,14 @@ func logout(w http.ResponseWriter, r *http.Request) {
   w.Header().Set("Content-Type", "text/html; charset=utf-8")
   fmt.Fprint(w, "<meta http-equiv=\"refresh\" content=\"0;URL='/login'\" />")
   return
-  //http.Redirect(w, r, "/login", 301)
 }
 
-func login(w http.ResponseWriter, r *http.Request) {
+func Login(w http.ResponseWriter, r *http.Request) {
   session, _ := store.Get(r, cookie_name)
 	tmpl := template.Must(template.ParseFiles("login.html"))
+  
   //already authd, render tmpl
-  //if session.Values["authenticated"].(bool) == true {
-  auth, _ := session.Values["authenticated"].(bool)
-  if auth == true {
-    w.Header().Set("Content-Type", "text/html; charset=utf-8")
-    fmt.Fprint(w, "<meta http-equiv=\"refresh\" content=\"0;URL='/'\" />")
-    return
-	}
+  ValidateAuthSessionTrue(session, w, r)
 
   //if not authd and not a POST, render tmpl
 	if r.Method != http.MethodPost {
@@ -160,7 +141,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	}
 	// get auth url from server
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //ignore cert for now
-	resp, err := http.Get(auth_server + "/info")
+	resp, err := http.Get(credhub_server + "/info")
 	if err != nil {
 		panic(err)
 	}
@@ -202,19 +183,61 @@ func login(w http.ResponseWriter, r *http.Request) {
 	tmpl.Execute(w, struct{ Success bool }{true})
 }
 
+func ValidateAuthToken(session *sessions.Session, access_token string, w http.ResponseWriter, r *http.Request) {
+  var p jwt.Parser
+  token, _, _ := p.ParseUnverified(access_token, &jwt.StandardClaims{})
+  if err := token.Claims.Valid(); err != nil {
+    fmt.Println("invalid")
+  	session.Values["authenticated"] = false
+  	session.Values["access_token"] = ""
+  	session.Save(r, w)
+    w.Header().Set("Content-Type", "text/html; charset=utf-8")
+    fmt.Fprint(w, "<meta http-equiv=\"refresh\" content=\"0;URL='/login'\" />")
+    return
+  }
+  return
+}
+
+func ValidateAuthSessionFalse(session *sessions.Session, w http.ResponseWriter, r *http.Request) {
+  auth, _ := session.Values["authenticated"].(bool)
+  if auth == false {
+    w.Header().Set("Content-Type", "text/html; charset=utf-8")
+    fmt.Fprint(w, "<meta http-equiv=\"refresh\" content=\"0;URL='/login'\" />")
+    return
+  }
+  return
+}
+
+
+func ValidateAuthSessionTrue(session *sessions.Session, w http.ResponseWriter, r *http.Request) {
+  auth, _ := session.Values["authenticated"].(bool)
+  if auth == true {
+    w.Header().Set("Content-Type", "text/html; charset=utf-8")
+    fmt.Fprint(w, "<meta http-equiv=\"refresh\" content=\"0;URL='/'\" />")
+    return
+  }
+  return
+}
+
+func faviconHandler(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "favicon.ico")
+}
+
 func main() {
-	http.HandleFunc("/login", login)
-	http.HandleFunc("/logout", logout)
-	http.HandleFunc("/", listCredentials)
+	http.HandleFunc("/login", Login)
+	http.HandleFunc("/logout", Logout)
+	http.HandleFunc("/", ListCredentials)
+  http.HandleFunc("/favicon.ico", faviconHandler)
 
 	//http.ListenAndServe(":8080", nil)
-  err := http.ListenAndServe(":8080", logRequest(http.DefaultServeMux))
+  //err := http.ListenAndServe(":8080", LogRequest(http.DefaultServeMux))
+  err := http.ListenAndServeTLS(":8443", "server.crt", "server.key", LogRequest(http.DefaultServeMux))
 	if err != nil {
 		fmt.Println(err)
 	}
 }
 
-func logRequest(handler http.Handler) http.Handler {
+func LogRequest(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("%s %s %s\n", r.RemoteAddr, r.Method, r.URL)
 		handler.ServeHTTP(w, r)

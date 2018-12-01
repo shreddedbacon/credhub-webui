@@ -12,11 +12,12 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o app .
 # If you need SSL certificates for HTTPS, replace `FROM SCRATCH` with:
 #
 FROM alpine:3.7
-RUN apk --no-cache add ca-certificates
-#FROM scratch
+RUN apk --no-cache add ca-certificates openssl
 WORKDIR /root/
+RUN openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=localhost"  -keyout server.key  -out server.crt
 COPY --from=builder /go/src/github.com/sb/goweb/app .
 COPY *.html ./
+RUN touch favicon.ico
 
-EXPOSE 80
+EXPOSE 8443
 ENTRYPOINT ["./app"]
