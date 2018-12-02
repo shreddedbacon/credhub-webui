@@ -3,16 +3,16 @@
         Generate RSA Key
     </div>
     <div class="modal-body">
-      <form action="/generate/rsa" method="post">
+      <form id="generate" action="/generate/rsa" method="post">
         <div class="form-group">
           <label for="name" class="col-form-label">Name</label>
           <input type="text" class="form-control" id="name" name="name" placeholder="/example-name" required autofocus>
         </div>
-        <button type="submit" class="btn btn-success">Generate</button>
       </form>
     </div>
     <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-success" form="generate">Generate</button>
     </div>
     <script>
     $(document).ready(function () {

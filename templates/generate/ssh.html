@@ -3,7 +3,7 @@
         Generate SSH Key
     </div>
     <div class="modal-body">
-      <form action="/generate/ssh" method="post">
+      <form id="generate" action="/generate/ssh" method="post">
         <div class="form-group">
           <label for="name" class="col-form-label">Name</label>
           <input type="text" class="form-control" id="name" name="name" placeholder="/example-name" required autofocus>
@@ -12,11 +12,11 @@
           <label for="ssh_comment" class="col-form-label">SSH Comment</label>
           <input type="text" class="form-control" id="ssh_comment" name="ssh_comment" placeholder="">
         </div>
-        <button type="submit" class="btn btn-success">Generate</button>
       </form>
     </div>
     <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-success" form="generate">Generate</button>
     </div>
     <script>
     $(document).ready(function () {
