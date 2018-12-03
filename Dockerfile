@@ -19,4 +19,9 @@ COPY templates/ templates
 # blank favicon for now
 RUN touch favicon.ico
 EXPOSE 8443
+# which certificate to use for the UI
+ENV UI_SSL_CERT=server.crt
+ENV UI_SSL_KEY=server.key
+ENV COOKIE_KEY="super-secret-key"
+ENV COOKIE_NAME="auth-cookie"
 ENTRYPOINT ["./credhub-webui"]

@@ -42,10 +42,13 @@ type AuthServerResponse struct {
 
 var (
 	// key must be 16, 24 or 32 bytes long (AES-128, AES-192 or AES-256)
-	key         = []byte("super-secret-key")
+  keyval = os.Getenv("COOKIE_KEY")
+	key         = []byte(keyval)
 	store       = sessions.NewCookieStore(key)
 	credhub_server = os.Getenv("CREDHUB_SERVER")
-	cookie_name = "auth-cookie"
+	ui_ssl_cert = os.Getenv("UI_SSL_CERT")
+	ui_ssl_key = os.Getenv("UI_SSL_KEY")
+	cookie_name = os.Getenv("COOKIE_NAME")
 )
 
 type CredentialsData struct {
@@ -162,6 +165,25 @@ func ValidateToken(next http.HandlerFunc) http.HandlerFunc {
 }
 
 func main() {
+  if len(os.Getenv("COOKIE_KEY")) == 0 {
+    log.Fatalln("COOKIE_KEY env var not set")
+  }
+  if len(os.Getenv("CREDHUB_SERVER")) == 0 {
+    log.Fatalln("CREDHUB_SERVER env var not set")
+  }
+  if len(os.Getenv("COOKIE_NAME")) == 0 {
+    log.Fatalln("COOKIE_NAME env var not set")
+  }
+  if len(os.Getenv("COOKIE_KEY")) == 0 {
+    log.Fatalln("COOKIE_KEY env var not set")
+  }
+  if len(os.Getenv("UI_SSL_CERT")) == 0 {
+    log.Fatalln("UI_SSL_CERT env var not set")
+  }
+  if len(os.Getenv("UI_SSL_KEY")) == 0 {
+    log.Fatalln("UI_SSL_KEY env var not set")
+  }
+
   log.SetFlags(log.Ldate | log.Ltime)
   r := mux.NewRouter()
 	r.HandleFunc("/login", Login)
@@ -174,7 +196,7 @@ func main() {
 
 	//http.ListenAndServe(":8080", nil)
   //err := http.ListenAndServe(":8080", LogRequest(http.DefaultServeMux))
-  err := http.ListenAndServeTLS(":8443", "server.crt", "server.key", LogRequest(r))
+  err := http.ListenAndServeTLS(":8443", ui_ssl_cert, ui_ssl_key, LogRequest(r))
 	if err != nil {
 		fmt.Println(err)
 	}
