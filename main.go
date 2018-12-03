@@ -10,9 +10,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"time"
+  "log"
 
   "github.com/gorilla/sessions"
   "github.com/gorilla/mux"
+  "github.com/dgrijalva/jwt-go"
 )
 
 type ClientStruct struct {
@@ -59,8 +61,11 @@ type CredentialPageData struct {
 }
 
 func ListCredentials(w http.ResponseWriter, r *http.Request) {
-  session, _ := store.Get(r, cookie_name)
-  // api call to make
+  //set the access token from session
+  session := GetSession(w, r)
+  access_token, _ := session.Values["access_token"].(string)
+
+  //api call to make
   api_query := "/api/v1/data?name-like="
   //if we get a search query, add it to the api_query
   param1, ok := r.URL.Query()["search"]
@@ -68,21 +73,13 @@ func ListCredentials(w http.ResponseWriter, r *http.Request) {
     api_query = api_query+param1[0]
   }
 
-  // use template
-  tmpl := template.Must(template.ParseFiles("templates/credentials.html", "templates/base.html"))
-	// Check if user is authenticated
-  ValidateAuthSessionFalse(session, w, r)
-  access_token := session.Values["access_token"].(string)
-
-  //validate token
-  ValidateAuthToken(session, access_token, w, r)
 
   // call the credhub api to get all credentials
   // set up netClient for use later
   var netClient = &http.Client{
     Timeout: time.Second * 10,
   }
-  http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //ignore cert for now
+  http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //ignore cert for now FIX: add credhub and uaa certificate as environment variables on startup
 	req, _ := http.NewRequest("GET", credhub_server+api_query, bytes.NewBuffer([]byte("")))
 	req.Header.Add("authorization", "bearer "+access_token)
 	req.Header.Set("Content-Type", "application/json")
@@ -105,6 +102,8 @@ func ListCredentials(w http.ResponseWriter, r *http.Request) {
       credResp,
     },
 	}
+  // use template
+  tmpl := template.Must(template.ParseFiles("templates/credentials.html", "templates/base.html"))
 	tmpl.ExecuteTemplate(w, "base", data)
 }
 
@@ -127,15 +126,51 @@ func FaviconHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "favicon.ico")
 }
 
+func GetSession(w http.ResponseWriter, r *http.Request) (*sessions.Session) {
+  session, err := store.Get(r, cookie_name)
+	if err != nil {
+    fmt.Printf("session error")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return nil
+	}
+  return session
+}
+
+func ValidateToken(next http.HandlerFunc) http.HandlerFunc {
+  return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+    session := GetSession(w, req)
+    access_token, setbool := session.Values["access_token"].(string)
+    if setbool == true && access_token == "" {
+      RedirectLogin(w)
+      return
+    } else {
+      var p jwt.Parser
+      token, _, _ := p.ParseUnverified(access_token, &jwt.StandardClaims{})
+      if err := token.Claims.Valid(); err != nil {
+        //invalid
+        RedirectLogin(w)
+        return
+      } else {
+        //valid
+        next(w, req)
+        return
+      }
+    }
+    RedirectLogin(w)
+    return
+  })
+}
+
 func main() {
+  log.SetFlags(log.Ldate | log.Ltime)
   r := mux.NewRouter()
 	r.HandleFunc("/login", Login)
 	r.HandleFunc("/logout", Logout)
-	r.HandleFunc("/get", GetCredentials)
-	r.HandleFunc("/delete", DeleteCredentials)
-	r.HandleFunc("/generate/{credtype}", GenerateCredentials)
+	r.HandleFunc("/get", ValidateToken(GetCredentials))
+	r.HandleFunc("/delete", ValidateToken(DeleteCredentials))
+	r.HandleFunc("/generate/{credtype}", ValidateToken(GenerateCredentials))
   r.HandleFunc("/favicon.ico", FaviconHandler)
-	r.HandleFunc("/", ListCredentials)
+	r.HandleFunc("/", ValidateToken(ListCredentials))
 
 	//http.ListenAndServe(":8080", nil)
   //err := http.ListenAndServe(":8080", LogRequest(http.DefaultServeMux))
@@ -147,7 +182,7 @@ func main() {
 
 func LogRequest(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Printf("%s %s %s\n", r.RemoteAddr, r.Method, r.URL)
+		log.Printf("%s %s %s\n", r.RemoteAddr, r.Method, r.URL)
 		handler.ServeHTTP(w, r)
 	})
 }

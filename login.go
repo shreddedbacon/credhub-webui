@@ -24,11 +24,11 @@ type Flash struct {
 }
 
 func Login(w http.ResponseWriter, r *http.Request) {
-  session, _ := store.Get(r, cookie_name)
+  session := GetSession(w, r)
 	tmpl := template.Must(template.ParseFiles("templates/login.html"))
 
   //already authd, render tmpl
-  ValidateAuthSessionTrue(session, w, r)
+  ValidateAuthSession(session, w, r)
 
   //if not authd and not a POST, render tmpl
 	if r.Method != http.MethodPost {
@@ -57,7 +57,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	oauth_server := authResp.AuthServer.URL
 
 	// post auth request
-	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //ignore cert for now
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //ignore cert for now FIX: add credhub and uaa certificate as environment variables on startup
 	resp, err = http.PostForm(oauth_server+"/oauth/token", url.Values{
 		"client_id": {loginCreds.ClientID},
 		"client_secret": {loginCreds.ClientSecret},
@@ -84,8 +84,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
   }
   if list.Error == "" {
   	// Authentication goes here
-  	// Set user as authenticated
-  	session.Values["authenticated"] = true
   	session.Values["access_token"] = list.AccessToken
   	session.Save(r, w)
     flashes := session.Flashes()
@@ -120,44 +118,27 @@ func Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {
-	session, _ := store.Get(r, cookie_name)
-  fmt.Println("logout")
-	// Revoke users authentication
-	session.Values["authenticated"] = false
+  //can this be done better?
+  session := GetSession(w, r)
 	session.Values["access_token"] = ""
 	session.Save(r, w)
   RedirectLogin(w)
   return
 }
 
-func ValidateAuthToken(session *sessions.Session, access_token string, w http.ResponseWriter, r *http.Request) {
-  var p jwt.Parser
-  token, _, _ := p.ParseUnverified(access_token, &jwt.StandardClaims{})
-  if err := token.Claims.Valid(); err != nil {
-    fmt.Println("invalid")
-  	session.Values["authenticated"] = false
-  	session.Values["access_token"] = ""
-  	session.Save(r, w)
-    RedirectLogin(w)
-    return
-  }
-  return
-}
-
-func ValidateAuthSessionFalse(session *sessions.Session, w http.ResponseWriter, r *http.Request) {
-  auth, _ := session.Values["authenticated"].(bool)
-  if auth == false {
-    RedirectLogin(w)
-    return
-  }
-  return
-}
-
-
-func ValidateAuthSessionTrue(session *sessions.Session, w http.ResponseWriter, r *http.Request) {
-  auth, _ := session.Values["authenticated"].(bool)
-  if auth == true {
-    RedirectHome(w)
+func ValidateAuthSession(session *sessions.Session, w http.ResponseWriter, r *http.Request) {
+  access_token, _ := session.Values["access_token"].(string)
+  if access_token != "" {
+    var p jwt.Parser
+    token, _, _ := p.ParseUnverified(access_token, &jwt.StandardClaims{})
+    if err := token.Claims.Valid(); err != nil {
+      //invalid
+      return
+    } else {
+      //valid
+      RedirectHome(w)
+      return
+    }
     return
   }
   return

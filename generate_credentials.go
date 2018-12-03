@@ -42,16 +42,17 @@ type PasswordParameters struct {
 }
 
 func GenerateCredentials(w http.ResponseWriter, r *http.Request) {
-  session, _ := store.Get(r, cookie_name)
+  //session, _ := store.Get(r, cookie_name)
+  session := GetSession(w, r)
   muxvars := mux.Vars(r)
   credtype := muxvars["credtype"]
 
 	// Check if user is authenticated
-  ValidateAuthSessionFalse(session, w, r)
+  //ValidateAuthSessionFalse(session, w, r)
   access_token := session.Values["access_token"].(string)
 
   //validate token
-  ValidateAuthToken(session, access_token, w, r)
+  //ValidateAuthToken(session, access_token, w, r)
 
 	if r.Method == http.MethodPost {
     switch credtype {
@@ -203,7 +204,7 @@ func PostCredentials(w http.ResponseWriter, credential PasswordStruct, access_to
   var netClient = &http.Client{
     Timeout: time.Second * 10,
   }
-  http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //ignore cert for now
+  http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //ignore cert for now FIX: add credhub and uaa certificate as environment variables on startup
   jsonStr, _ := json.Marshal(credential)
   req, _ := http.NewRequest("POST", credhub_server+api_query, bytes.NewBuffer(jsonStr))
   req.Header.Add("authorization", "bearer "+access_token)

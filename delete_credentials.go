@@ -10,7 +10,8 @@ import (
 )
 
 func DeleteCredentials(w http.ResponseWriter, r *http.Request) {
-  session, _ := store.Get(r, cookie_name)
+  //session, _ := store.Get(r, cookie_name)
+  session := GetSession(w, r)
   // api call to make
   api_query := "/api/v1/data?name="
   //if we get a search query, add it to the api_query
@@ -20,18 +21,18 @@ func DeleteCredentials(w http.ResponseWriter, r *http.Request) {
   }
 
 	// Check if user is authenticated
-  ValidateAuthSessionFalse(session, w, r)
+  //ValidateAuthSessionFalse(session, w, r)
   access_token := session.Values["access_token"].(string)
 
   //validate token
-  ValidateAuthToken(session, access_token, w, r)
+  //ValidateAuthToken(session, access_token, w, r)
 
   // call the credhub api to get all credentials
   // set up netClient for use later
   var netClient = &http.Client{
     Timeout: time.Second * 10,
   }
-  http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //ignore cert for now
+  http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //ignore cert for now FIX: add credhub and uaa certificate as environment variables on startup
 	req, _ := http.NewRequest("DELETE", credhub_server+api_query, bytes.NewBuffer([]byte("")))
 	req.Header.Add("authorization", "bearer "+access_token)
 	req.Header.Set("Content-Type", "application/json")
