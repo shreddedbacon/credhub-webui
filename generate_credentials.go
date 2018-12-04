@@ -166,18 +166,14 @@ func GenerateCredentials(w http.ResponseWriter, r *http.Request) {
 		}
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		fmt.Fprint(w, "<meta http-equiv=\"refresh\" content=\"0;URL='/'\" />")
-		return
 	} else {
 		if stringInSlice(credType, []string{"password", "user", "certificate", "rsa", "ssh"}) {
 			tmpl := template.Must(template.ParseFiles("templates/generate/" + credType + ".html"))
 			tmpl.ExecuteTemplate(w, "base", nil)
-			return
 		} else {
 			ReturnBlank(w)
-			return
 		}
 	}
-	ReturnBlank(w)
 	return
 }
 

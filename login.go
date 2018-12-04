@@ -92,13 +92,11 @@ func Login(w http.ResponseWriter, r *http.Request) {
 				Flash:   flash.Message,
 			}
 			tmpl.Execute(w, response)
-			return
 		}
 		response := LoginStruct{
 			Success: true,
 		}
 		tmpl.Execute(w, response)
-		return
 	}
 	flashes := session.Flashes()
 	if len(flashes) > 0 {
@@ -107,12 +105,9 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			Flash: flash.Message,
 		}
 		tmpl.Execute(w, response)
-		return
 	} else {
 		tmpl.Execute(w, nil)
-		return
 	}
-	tmpl.Execute(w, nil)
 	return
 }
 
