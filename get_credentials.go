@@ -112,11 +112,11 @@ type GetCredentialCert struct {
 func GetCredentials(w http.ResponseWriter, r *http.Request) {
   session := GetSession(w, r)
   // api call to make
-  api_query := "/api/v1/data?name="
-  //if we get a search query, add it to the api_query
+  apiQuery := "/api/v1/data?name="
+  //if we get a search query, add it to the apiQuery
   param1, ok := r.URL.Query()["name"]
   if ok {
-    api_query = api_query+param1[0]
+    apiQuery = apiQuery+param1[0]
   }
   accessToken := session.Values["access_token"].(string)
   // call the credhub api to get all credentials
@@ -125,7 +125,7 @@ func GetCredentials(w http.ResponseWriter, r *http.Request) {
     Timeout: time.Second * 10,
   }
   http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //ignore cert for now FIX: add credhub and uaa certificate as environment variables on startup
-	req, _ := http.NewRequest("GET", credhub_server+api_query, bytes.NewBuffer([]byte("")))
+	req, _ := http.NewRequest("GET", credhub_server+apiQuery, bytes.NewBuffer([]byte("")))
 	req.Header.Add("authorization", "bearer "+accessToken)
 	req.Header.Set("Content-Type", "application/json")
 	resp, reqErr := netClient.Do(req)

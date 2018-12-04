@@ -53,11 +53,11 @@ func Login(w http.ResponseWriter, r *http.Request) {
   if authServErr := json.Unmarshal([]byte(authRespBytes), &authResp); err != nil {
     fmt.Println(authServErr)
   }
-	oauth_server := authResp.AuthServer.URL
+	oAuthServer := authResp.AuthServer.URL
 
 	// post auth request
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //ignore cert for now FIX: add credhub and uaa certificate as environment variables on startup
-	resp, err = http.PostForm(oauth_server+"/oauth/token", url.Values{
+	resp, err = http.PostForm(oAuthServer+"/oauth/token", url.Values{
 		"client_id": {loginCreds.ClientID},
 		"client_secret": {loginCreds.ClientSecret},
 		"grant_type": {"client_credentials"},

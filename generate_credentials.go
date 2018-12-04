@@ -104,9 +104,9 @@ func GenerateCredentials(w http.ResponseWriter, r *http.Request) {
       isCa, _ := strconv.ParseBool(strings.Join(r.Form["is_ca"],""))
       selfSign, _ := strconv.ParseBool(strings.Join(r.Form["self_sign"],""))
       organization := strings.Join(r.Form["organization"],"")
-      organization_unit := strings.Join(r.Form["organization_unit"],"")
-      common_name := strings.Join(r.Form["common_name"],"")
-      alternative_names := strings.Join(r.Form["alternative_names"],"")
+      organizationUnit := strings.Join(r.Form["organization_unit"],"")
+      commonName := strings.Join(r.Form["common_name"],"")
+      alternativeNames := strings.Join(r.Form["alternative_names"],"")
       locality := strings.Join(r.Form["locality"],"")
       state := strings.Join(r.Form["state"],"")
       country := strings.Join(r.Form["country"],"")
@@ -148,7 +148,7 @@ func GenerateCredentials(w http.ResponseWriter, r *http.Request) {
     case "ssh":
       credName := r.FormValue("name")
       r.ParseForm()
-      ssh_comment := strings.Join(r.Form["ssh_comment"],"")
+      sshComment := strings.Join(r.Form["ssh_comment"],"")
       //add to struct
       params := PasswordParameters{
         SSHComment: sshComment,
@@ -191,13 +191,13 @@ func stringInSlice(a string, list []string) bool {
 }
 
 func PostCredentials(w http.ResponseWriter, credential PasswordStruct, accessToken string) {
-  api_query := "/api/v1/data"
+  apiQuery := "/api/v1/data"
   var netClient = &http.Client{
     Timeout: time.Second * 10,
   }
   http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //ignore cert for now FIX: add credhub and uaa certificate as environment variables on startup
   jsonStr, _ := json.Marshal(credential)
-  req, _ := http.NewRequest("POST", credhub_server+api_query, bytes.NewBuffer(jsonStr))
+  req, _ := http.NewRequest("POST", credhub_server+apiQuery, bytes.NewBuffer(jsonStr))
   req.Header.Add("authorization", "bearer "+accessToken)
   req.Header.Set("Content-Type", "application/json")
   resp, reqErr := netClient.Do(req)

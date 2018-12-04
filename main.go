@@ -69,11 +69,11 @@ func ListCredentials(w http.ResponseWriter, r *http.Request) {
   accessToken, _ := session.Values["access_token"].(string)
 
   //api call to make
-  api_query := "/api/v1/data?name-like="
+  apiQuery := "/api/v1/data?name-like="
   //if we get a search query, add it to the api_query
   param1, ok := r.URL.Query()["search"]
   if ok {
-    api_query = api_query+param1[0]
+    apiQuery = apiQuery+param1[0]
   }
   // call the credhub api to get all credentials
   // set up netClient for use later
@@ -81,7 +81,7 @@ func ListCredentials(w http.ResponseWriter, r *http.Request) {
     Timeout: time.Second * 10,
   }
   http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //ignore cert for now FIX: add credhub and uaa certificate as environment variables on startup
-	req, _ := http.NewRequest("GET", credhubServer+api_query, bytes.NewBuffer([]byte("")))
+	req, _ := http.NewRequest("GET", credhubServer+apiQuery, bytes.NewBuffer([]byte("")))
 	req.Header.Add("authorization", "bearer "+accessToken)
 	req.Header.Set("Content-Type", "application/json")
 	resp, reqErr := netClient.Do(req)
@@ -143,21 +143,21 @@ func ValidateToken(next http.HandlerFunc) http.HandlerFunc {
     accessToken, setbool := session.Values["access_token"].(string)
     if setbool == true && accessToken == "" {
       RedirectLogin(w)
-      return
+      //return
     } else {
       var p jwt.Parser
       token, _, _ := p.ParseUnverified(accessToken, &jwt.StandardClaims{})
       if err := token.Claims.Valid(); err != nil {
         //invalid
         RedirectLogin(w)
-        return
+        //return
       } else {
         //valid
         next(w, req)
-        return
+        //return
       }
     }
-    RedirectLogin(w)
+    //RedirectLogin(w)
     return
   })
 }
