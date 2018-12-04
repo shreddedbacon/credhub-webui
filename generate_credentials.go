@@ -197,7 +197,7 @@ func PostCredentials(w http.ResponseWriter, credential PasswordStruct, accessTok
   }
   http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //ignore cert for now FIX: add credhub and uaa certificate as environment variables on startup
   jsonStr, _ := json.Marshal(credential)
-  req, _ := http.NewRequest("POST", credhub_server+apiQuery, bytes.NewBuffer(jsonStr))
+  req, _ := http.NewRequest("POST", credhubServer+apiQuery, bytes.NewBuffer(jsonStr))
   req.Header.Add("authorization", "bearer "+accessToken)
   req.Header.Set("Content-Type", "application/json")
   resp, reqErr := netClient.Do(req)

@@ -125,7 +125,7 @@ func GetCredentials(w http.ResponseWriter, r *http.Request) {
     Timeout: time.Second * 10,
   }
   http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //ignore cert for now FIX: add credhub and uaa certificate as environment variables on startup
-	req, _ := http.NewRequest("GET", credhub_server+apiQuery, bytes.NewBuffer([]byte("")))
+	req, _ := http.NewRequest("GET", credhubServer+apiQuery, bytes.NewBuffer([]byte("")))
 	req.Header.Add("authorization", "bearer "+accessToken)
 	req.Header.Set("Content-Type", "application/json")
 	resp, reqErr := netClient.Do(req)

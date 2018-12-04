@@ -42,7 +42,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 	// get auth url from server
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //ignore cert for now
-	resp, err := http.Get(credhub_server + "/info")
+	resp, err := http.Get(credhubServer + "/info")
 	if err != nil {
 		panic(err)
 	}
@@ -129,15 +129,9 @@ func ValidateAuthSession(session *sessions.Session, w http.ResponseWriter, r *ht
   if accessToken != "" {
     var p jwt.Parser
     token, _, _ := p.ParseUnverified(accessToken, &jwt.StandardClaims{})
-    if err := token.Claims.Valid(); err != nil {
-      //invalid
-      return
-    } else {
-      //valid
+    if err := token.Claims.Valid(); err == nil {
       RedirectHome(w)
-      return
     }
-    return
   }
   return
 }
