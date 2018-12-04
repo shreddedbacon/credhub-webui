@@ -45,10 +45,10 @@ var (
   keyval = os.Getenv("COOKIE_KEY")
 	key         = []byte(keyval)
 	store       = sessions.NewCookieStore(key)
-	credhub_server = os.Getenv("CREDHUB_SERVER")
-	ui_ssl_cert = os.Getenv("UI_SSL_CERT")
-	ui_ssl_key = os.Getenv("UI_SSL_KEY")
-	cookie_name = os.Getenv("COOKIE_NAME")
+	credhubServer = os.Getenv("CREDHUB_SERVER")
+	uiSslCert = os.Getenv("UI_SSL_CERT")
+	uiSslKey = os.Getenv("UI_SSL_KEY")
+	cookieName = os.Getenv("COOKIE_NAME")
 )
 
 type CredentialsData struct {
@@ -66,7 +66,7 @@ type CredentialPageData struct {
 func ListCredentials(w http.ResponseWriter, r *http.Request) {
   //set the access token from session
   session := GetSession(w, r)
-  access_token, _ := session.Values["access_token"].(string)
+  accessToken, _ := session.Values["access_token"].(string)
 
   //api call to make
   api_query := "/api/v1/data?name-like="
@@ -75,16 +75,14 @@ func ListCredentials(w http.ResponseWriter, r *http.Request) {
   if ok {
     api_query = api_query+param1[0]
   }
-
-
   // call the credhub api to get all credentials
   // set up netClient for use later
   var netClient = &http.Client{
     Timeout: time.Second * 10,
   }
   http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //ignore cert for now FIX: add credhub and uaa certificate as environment variables on startup
-	req, _ := http.NewRequest("GET", credhub_server+api_query, bytes.NewBuffer([]byte("")))
-	req.Header.Add("authorization", "bearer "+access_token)
+	req, _ := http.NewRequest("GET", credhubServer+api_query, bytes.NewBuffer([]byte("")))
+	req.Header.Add("authorization", "bearer "+accessToken)
 	req.Header.Set("Content-Type", "application/json")
 	resp, reqErr := netClient.Do(req)
   if reqErr != nil {
@@ -130,7 +128,7 @@ func FaviconHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetSession(w http.ResponseWriter, r *http.Request) (*sessions.Session) {
-  session, err := store.Get(r, cookie_name)
+  session, err := store.Get(r, cookieName)
 	if err != nil {
     fmt.Printf("session error")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -142,13 +140,13 @@ func GetSession(w http.ResponseWriter, r *http.Request) (*sessions.Session) {
 func ValidateToken(next http.HandlerFunc) http.HandlerFunc {
   return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
     session := GetSession(w, req)
-    access_token, setbool := session.Values["access_token"].(string)
-    if setbool == true && access_token == "" {
+    accessToken, setbool := session.Values["access_token"].(string)
+    if setbool == true && accessToken == "" {
       RedirectLogin(w)
       return
     } else {
       var p jwt.Parser
-      token, _, _ := p.ParseUnverified(access_token, &jwt.StandardClaims{})
+      token, _, _ := p.ParseUnverified(accessToken, &jwt.StandardClaims{})
       if err := token.Claims.Valid(); err != nil {
         //invalid
         RedirectLogin(w)
@@ -194,9 +192,7 @@ func main() {
   r.HandleFunc("/favicon.ico", FaviconHandler)
 	r.HandleFunc("/", ValidateToken(ListCredentials))
 
-	//http.ListenAndServe(":8080", nil)
-  //err := http.ListenAndServe(":8080", LogRequest(http.DefaultServeMux))
-  err := http.ListenAndServeTLS(":8443", ui_ssl_cert, ui_ssl_key, LogRequest(r))
+  err := http.ListenAndServeTLS(":8443", uiSslCert, uiSslKey, LogRequest(r))
 	if err != nil {
 		fmt.Println(err)
 	}

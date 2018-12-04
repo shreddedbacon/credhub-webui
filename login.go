@@ -48,7 +48,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
-	//fmt.Println("get:\n", string(body))
 	authRespBytes := []byte(body)
 	authResp := AuthServerResponse{}
   if authServErr := json.Unmarshal([]byte(authRespBytes), &authResp); err != nil {
@@ -69,7 +68,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 	defer resp.Body.Close()
 	body, err = ioutil.ReadAll(resp.Body)
-	//fmt.Println("post:\n", string(body))
 	textBytes := []byte(body)
 	list := AuthResponse{}
   if err := json.Unmarshal([]byte(textBytes), &list); err != nil {
@@ -127,10 +125,10 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 }
 
 func ValidateAuthSession(session *sessions.Session, w http.ResponseWriter, r *http.Request) {
-  access_token, _ := session.Values["access_token"].(string)
-  if access_token != "" {
+  accessToken, _ := session.Values["access_token"].(string)
+  if accessToken != "" {
     var p jwt.Parser
-    token, _, _ := p.ParseUnverified(access_token, &jwt.StandardClaims{})
+    token, _, _ := p.ParseUnverified(accessToken, &jwt.StandardClaims{})
     if err := token.Claims.Valid(); err != nil {
       //invalid
       return

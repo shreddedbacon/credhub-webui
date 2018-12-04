@@ -110,7 +110,6 @@ type GetCredentialCert struct {
 
 
 func GetCredentials(w http.ResponseWriter, r *http.Request) {
-  //session, _ := store.Get(r, cookie_name)
   session := GetSession(w, r)
   // api call to make
   api_query := "/api/v1/data?name="
@@ -119,14 +118,7 @@ func GetCredentials(w http.ResponseWriter, r *http.Request) {
   if ok {
     api_query = api_query+param1[0]
   }
-
-	// Check if user is authenticated
-  //ValidateAuthSessionFalse(session, w, r)
-  access_token := session.Values["access_token"].(string)
-
-  //validate token
-  //ValidateAuthToken(session, access_token, w, r)
-
+  accessToken := session.Values["access_token"].(string)
   // call the credhub api to get all credentials
   // set up netClient for use later
   var netClient = &http.Client{
@@ -134,7 +126,7 @@ func GetCredentials(w http.ResponseWriter, r *http.Request) {
   }
   http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //ignore cert for now FIX: add credhub and uaa certificate as environment variables on startup
 	req, _ := http.NewRequest("GET", credhub_server+api_query, bytes.NewBuffer([]byte("")))
-	req.Header.Add("authorization", "bearer "+access_token)
+	req.Header.Add("authorization", "bearer "+accessToken)
 	req.Header.Set("Content-Type", "application/json")
 	resp, reqErr := netClient.Do(req)
   if reqErr != nil {
@@ -150,7 +142,6 @@ func GetCredentials(w http.ResponseWriter, r *http.Request) {
     fmt.Println(credServErr)
   }
   for _, cred := range credResp.Data {
-    //fmt.Println(cred.Value)
     switch cred.Type {
     case "rsa":
     	credRespSSH := GetCredentialSSH{}
