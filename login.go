@@ -67,7 +67,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	defer resp.Body.Close()
-	body, err = ioutil.ReadAll(resp.Body)
+	body, _ = ioutil.ReadAll(resp.Body)
 	textBytes := []byte(body)
 	list := AuthResponse{}
   if err := json.Unmarshal([]byte(textBytes), &list); err != nil {

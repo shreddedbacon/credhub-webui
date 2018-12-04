@@ -1,4 +1,4 @@
-excludeUpper,package main
+package main
 
 import (
 	"crypto/tls"
@@ -10,7 +10,6 @@ import (
   "strconv"
   "strings"
   "encoding/json"
-  //"io/ioutil"
   "github.com/gorilla/mux"
 )
 
