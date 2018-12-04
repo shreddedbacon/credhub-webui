@@ -113,6 +113,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
     return
   }
   tmpl.Execute(w, nil)
+  return
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {
