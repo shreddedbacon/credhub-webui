@@ -1,6 +1,8 @@
-{{define "content"}}
-      <div class="starter-template">
-        <h1>{{.PageTitle}}</h1>
+{{define "base"}}
+    <div class="modal-header">
+        {{.PageTitle}}
+    </div>
+    <div class="modal-body">
         <div class="row">
         <div class="col-md-12">
         <div class="panel-body">
@@ -46,4 +48,7 @@
         </div>
         </div>
       </div>
-{{end}}
+      <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+  {{end}}

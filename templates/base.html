@@ -49,22 +49,21 @@
           <li class="nav-item active">
             <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
           </li>
-          <!-- soon -->
-          <!--li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="http://example.com" id="dropdown01" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Set Credential</a>
-            <div class="dropdown-menu" aria-labelledby="dropdown01">
-              <a class="dropdown-item" href="/new/value">Value</a>
-              <a class="dropdown-item" href="/new/json">JSON</a>
-              <a class="dropdown-item" href="/new/password">Password</a>
-              <a class="dropdown-item" href="/new/user">User</a>
-              <a class="dropdown-item" href="/new/certificate">Certificate</a>
-              <a class="dropdown-item" href="/new/rsa">RSA</a>
-              <a class="dropdown-item" href="/new/ssh">SSH</a>
-            </div>
-          </li-->
           <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="http://example.com" id="dropdown01" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Generate Credential</a>
-            <div class="dropdown-menu" aria-labelledby="dropdown01">
+            <a class="nav-link dropdown-toggle" href="#" id="set-dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Set Credential</a>
+            <div class="dropdown-menu" aria-labelledby="set-dropdown">
+              <a class="dropdown-item" href="/set/value" data-url="/set/value" data-target="#generate-modal" data-toggle="modal">Value</a>
+              <a class="dropdown-item" href="/set/json" data-url="/set/json" data-target="#generate-modal" data-toggle="modal">JSON</a>
+              <a class="dropdown-item" href="/set/password" data-url="/set/password" data-target="#generate-modal" data-toggle="modal">Password</a>
+              <a class="dropdown-item" href="/set/user" data-url="/set/user" data-target="#generate-modal" data-toggle="modal">User</a>
+              <a class="dropdown-item" href="/set/certificate" data-url="/set/certificate" data-target="#generate-modal" data-toggle="modal">Certificate</a>
+              <a class="dropdown-item" href="/set/rsa" data-url="/set/rsa" data-target="#generate-modal" data-toggle="modal">RSA</a>
+              <a class="dropdown-item" href="/set/ssh" data-url="/set/ssh" data-target="#generate-modal" data-toggle="modal">SSH</a>
+            </div>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="generate-dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Generate Credential</a>
+            <div class="dropdown-menu" aria-labelledby="generate-dropdown">
             <a class="dropdown-item btn-action" href="/generate/password" data-url="/generate/password" data-target="#generate-modal" data-toggle="modal">Password</a>
             <a class="dropdown-item btn-action" href="/generate/user" data-url="/generate/user" data-target="#generate-modal" data-toggle="modal">User</a>
             <a class="dropdown-item btn-action" href="/generate/certificate" data-url="/generate/certificate" data-target="#generate-modal" data-toggle="modal">Certificate</a>
@@ -88,11 +87,25 @@
     </nav>
 
     <main role="main" class="container-fluid">
+      {{- if .Flash.Display -}}
+      <div class="alert alert-{{.Flash.Type}} alert-dismissible fade show" role="alert">
+        {{.Flash.Message}}
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      {{- end -}}
       {{template "content" .}}
     </main><!-- /.container -->
     <div class="modal fade" id="generate-modal">
       <div class="modal-dialog">
         <div class="modal-content gen-modal">
+        </div>
+      </div>
+    </div>
+    <div class="modal fade" id="view-modal">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content view-modal">
         </div>
       </div>
     </div>
@@ -117,6 +130,12 @@
         var modal = $(this);
         // or, load content from value of data-remote url
         modal.find('.gen-modal').load(button.data("url"));
+      });
+      $('#view-modal').on('show.bs.modal', function(e) {
+        var button = $(e.relatedTarget);
+        var modal = $(this);
+        // or, load content from value of data-remote url
+        modal.find('.view-modal').load(button.data("url"));
       });
       $('.custom-control-input').on('change', evt => {
         var target = $(event.target);

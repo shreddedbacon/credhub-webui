@@ -1,0 +1,39 @@
+{{define "base"}}
+    <div class="modal-header">
+        Generate User and Password
+    </div>
+    <div class="modal-body">
+      <form id="generate" action="/set/user" method="post">
+        <div class="form-group">
+          <label for="name" class="col-form-label">Name</label>
+          <input type="text" class="form-control" id="name" name="name" placeholder="/example-name" required autofocus>
+        </div>
+        <div class="form-group">
+          <label for="username" class="col-form-label">Username</label>
+          <input type="text" class="form-control" id="username" name="username" placeholder="username" required>
+        </div>
+        <div class="form-group">
+          <label for="password" class="col-form-label">Password</label>
+          <input type="password" class="form-control" id="password" name="password" placeholder="password" required>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-success" form="generate">Generate</button>
+    </div>
+    <script>
+    $(document).ready(function () {
+      $('.custom-control-input').on('change', evt => {
+        var target = $(event.target);
+        if (target.is('input')) {
+          if(target.is(":checked") == true) {
+          target.attr("checked", "checked");
+          } else {
+          target.attr("checked", false);
+          }
+        }
+      });
+    });
+    </script>
+{{end}}
