@@ -21,10 +21,11 @@ type LoginStruct struct {
 type Flash struct {
 	Type    string
 	Message string
+	Display bool
 }
 
 func Login(w http.ResponseWriter, r *http.Request) {
-	session := GetSession(w, r)
+	session := GetSession(w, r, cookieName)
 	tmpl := template.Must(template.ParseFiles("templates/login.html"))
 
 	//already authd, render tmpl
@@ -113,10 +114,10 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 func Logout(w http.ResponseWriter, r *http.Request) {
 	//can this be done better?
-	session := GetSession(w, r)
+	session := GetSession(w, r, cookieName)
 	session.Values["access_token"] = ""
 	session.Save(r, w)
-	RedirectLogin(w)
+	RedirectLogin(w, r)
 	return
 }
 
@@ -126,7 +127,7 @@ func ValidateAuthSession(session *sessions.Session, w http.ResponseWriter, r *ht
 		var p jwt.Parser
 		token, _, _ := p.ParseUnverified(accessToken, &jwt.StandardClaims{})
 		if err := token.Claims.Valid(); err == nil {
-			RedirectHome(w)
+			RedirectHome(w, r)
 		}
 	}
 	return

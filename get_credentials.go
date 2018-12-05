@@ -23,7 +23,9 @@ type GetCredential struct {
 type GetCredentialPageData struct {
 	PageTitle   string
 	Credentials []GetCredentialData
+	Flash       Flash
 }
+
 type GetCredentialData struct {
 	Data []struct {
 		Type             string    `json:"type"`
@@ -37,6 +39,7 @@ type GetCredentialData struct {
 type GetCredentialPageDataJson struct {
 	PageTitle   string
 	Credentials []GetCredentialJson
+	Flash       Flash
 }
 
 type GetCredentialJson struct {
@@ -52,6 +55,7 @@ type GetCredentialJson struct {
 type GetCredentialPageDataSSH struct {
 	PageTitle   string
 	Credentials []GetCredentialSSH
+	Flash       Flash
 }
 
 type GetCredentialSSH struct {
@@ -71,6 +75,7 @@ type GetCredentialSSH struct {
 type GetCredentialPageDataUser struct {
 	PageTitle   string
 	Credentials []GetCredentialUser
+	Flash       Flash
 }
 
 type GetCredentialUser struct {
@@ -90,6 +95,7 @@ type GetCredentialUser struct {
 type GetCredentialPageDataCert struct {
 	PageTitle   string
 	Credentials []GetCredentialCert
+	Flash       Flash
 }
 
 type GetCredentialCert struct {
@@ -107,7 +113,7 @@ type GetCredentialCert struct {
 }
 
 func GetCredentials(w http.ResponseWriter, r *http.Request) {
-	session := GetSession(w, r)
+	session := GetSession(w, r, cookieName)
 	// api call to make
 	apiQuery := "/api/v1/data?name="
 	//if we get a search query, add it to the apiQuery
@@ -138,6 +144,15 @@ func GetCredentials(w http.ResponseWriter, r *http.Request) {
 	if credServErr := json.Unmarshal([]byte(credRespBytes), &credResp); credServErr != nil {
 		fmt.Println(credServErr)
 	}
+	flashsession := GetSession(w, r, "flash-cookie")
+	flashes := flashsession.Flashes()
+	flash := Flash{
+		Display: false,
+	}
+	if len(flashes) > 0 {
+		flash = flashes[0].(Flash)
+		fmt.Println(flash)
+	}
 	for _, cred := range credResp.Data {
 		switch cred.Type {
 		case "rsa":
@@ -150,8 +165,9 @@ func GetCredentials(w http.ResponseWriter, r *http.Request) {
 				Credentials: []GetCredentialSSH{
 					credRespSSH,
 				},
+				Flash: flash,
 			}
-			tmpl := template.Must(template.ParseFiles("templates/getcredentials/rsa.html", "templates/base.html"))
+			tmpl := template.Must(template.ParseFiles("templates/getcredentials/rsa.html"))
 			tmpl.ExecuteTemplate(w, "base", data)
 			return
 		case "ssh":
@@ -164,8 +180,9 @@ func GetCredentials(w http.ResponseWriter, r *http.Request) {
 				Credentials: []GetCredentialSSH{
 					credRespSSH,
 				},
+				Flash: flash,
 			}
-			tmpl := template.Must(template.ParseFiles("templates/getcredentials/ssh.html", "templates/base.html"))
+			tmpl := template.Must(template.ParseFiles("templates/getcredentials/ssh.html"))
 			tmpl.ExecuteTemplate(w, "base", data)
 			return
 		case "certificate":
@@ -178,8 +195,9 @@ func GetCredentials(w http.ResponseWriter, r *http.Request) {
 				Credentials: []GetCredentialCert{
 					credRespCert,
 				},
+				Flash: flash,
 			}
-			tmpl := template.Must(template.ParseFiles("templates/getcredentials/certificate.html", "templates/base.html"))
+			tmpl := template.Must(template.ParseFiles("templates/getcredentials/certificate.html"))
 			tmpl.ExecuteTemplate(w, "base", data)
 			return
 		case "user":
@@ -192,8 +210,9 @@ func GetCredentials(w http.ResponseWriter, r *http.Request) {
 				Credentials: []GetCredentialUser{
 					credRespUser,
 				},
+				Flash: flash,
 			}
-			tmpl := template.Must(template.ParseFiles("templates/getcredentials/user.html", "templates/base.html"))
+			tmpl := template.Must(template.ParseFiles("templates/getcredentials/user.html"))
 			tmpl.ExecuteTemplate(w, "base", data)
 			return
 		case "json":
@@ -206,8 +225,9 @@ func GetCredentials(w http.ResponseWriter, r *http.Request) {
 				Credentials: []GetCredentialJson{
 					credRespJson,
 				},
+				Flash: flash,
 			}
-			tmpl := template.Must(template.ParseFiles("templates/getcredentials/json.html", "templates/base.html"))
+			tmpl := template.Must(template.ParseFiles("templates/getcredentials/json.html"))
 			tmpl.ExecuteTemplate(w, "base", data3)
 			return
 		default:
@@ -220,13 +240,14 @@ func GetCredentials(w http.ResponseWriter, r *http.Request) {
 				Credentials: []GetCredentialData{
 					credRespdata,
 				},
+				Flash: flash,
 			}
-			tmpl := template.Must(template.ParseFiles("templates/getcredentials/credential.html", "templates/base.html"))
+			tmpl := template.Must(template.ParseFiles("templates/getcredentials/credential.html"))
 			tmpl.ExecuteTemplate(w, "base", data)
 			return
 		}
 	}
 	// go home if no conditions met
-	RedirectHome(w)
+	RedirectHome(w, r)
 	return
 }

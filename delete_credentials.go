@@ -9,7 +9,7 @@ import (
 )
 
 func DeleteCredentials(w http.ResponseWriter, r *http.Request) {
-	session := GetSession(w, r)
+	session := GetSession(w, r, cookieName)
 	// api call to make
 	apiQuery := "/api/v1/data?name="
 	//if we get a search query, add it to the api_query
@@ -34,11 +34,8 @@ func DeleteCredentials(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer resp.Body.Close()
-	/*body, _ := ioutil.ReadAll(resp.Body)
-		credRespBytes := []byte(body)
-	  fmt.Println(string(credRespBytes))*/
+	AddFlash(w, r, "Deleted successfully", "success")
 	// go home if no conditions met
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	fmt.Fprint(w, "<meta http-equiv=\"refresh\" content=\"0;URL='/'\" />")
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 	return
 }

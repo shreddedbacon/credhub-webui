@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"crypto/tls"
+	"encoding/gob"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -61,11 +62,12 @@ type CredentialsData struct {
 type CredentialPageData struct {
 	PageTitle   string
 	Credentials []CredentialsData
+	Flash       Flash
 }
 
 func ListCredentials(w http.ResponseWriter, r *http.Request) {
 	//set the access token from session
-	session := GetSession(w, r)
+	session := GetSession(w, r, cookieName)
 	accessToken, _ := session.Values["access_token"].(string)
 
 	//api call to make
@@ -97,11 +99,22 @@ func ListCredentials(w http.ResponseWriter, r *http.Request) {
 	if credServErr := json.Unmarshal([]byte(credRespBytes), &credResp); credServErr != nil {
 		fmt.Println(credServErr)
 	}
+	flashsession := GetSession(w, r, "flash-cookie")
+	flashes := flashsession.Flashes()
+	var flash Flash
+	if len(flashes) > 0 {
+		flash = flashes[0].(Flash)
+	}
+	err := flashsession.Save(r, w)
+	if err != nil {
+		fmt.Println(err)
+	}
 	data := CredentialPageData{
 		PageTitle: "List Credentials",
 		Credentials: []CredentialsData{
 			credResp,
 		},
+		Flash: flash,
 	}
 	// use template
 	tmpl := template.Must(template.ParseFiles("templates/credentials.html", "templates/base.html"))
@@ -113,22 +126,20 @@ func ReturnBlank(w http.ResponseWriter) {
 	fmt.Fprint(w, "")
 }
 
-func RedirectHome(w http.ResponseWriter) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	fmt.Fprint(w, "<meta http-equiv=\"refresh\" content=\"0;URL='/'\" />")
+func RedirectHome(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-func RedirectLogin(w http.ResponseWriter) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	fmt.Fprint(w, "<meta http-equiv=\"refresh\" content=\"0;URL='/login'\" />")
+func RedirectLogin(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
 func FaviconHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "favicon.ico")
 }
 
-func GetSession(w http.ResponseWriter, r *http.Request) *sessions.Session {
-	session, err := store.Get(r, cookieName)
+func GetSession(w http.ResponseWriter, r *http.Request, sessionCookie string) *sessions.Session {
+	session, err := store.Get(r, sessionCookie)
 	if err != nil {
 		fmt.Printf("session error")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -137,19 +148,43 @@ func GetSession(w http.ResponseWriter, r *http.Request) *sessions.Session {
 	return session
 }
 
+func AddFlash(w http.ResponseWriter, r *http.Request, flashMessage string, flashType string) {
+	flashsession := GetSession(w, r, "flash-cookie")
+	flash := Flash{
+		Type:    flashType,
+		Message: flashMessage,
+		Display: true,
+	}
+	flashsession.AddFlash(flash)
+	flashsession.Save(r, w)
+}
+
+func CheckError(w http.ResponseWriter, r *http.Request, responseBody []byte, defaultFlashMessage string, defaultFlashType string) {
+	var rawJson map[string]interface{}
+	json.Unmarshal(responseBody, &rawJson)
+	for a, b := range rawJson {
+		if a == "error" {
+			AddFlash(w, r, b.(string), "danger")
+			return
+		}
+	}
+	AddFlash(w, r, defaultFlashMessage, defaultFlashType)
+	return
+}
+
 func ValidateToken(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		session := GetSession(w, req)
+		session := GetSession(w, req, cookieName)
 		accessToken, setbool := session.Values["access_token"].(string)
 		if setbool == true && accessToken == "" {
-			RedirectLogin(w)
+			RedirectLogin(w, req)
 			//return
 		} else {
 			var p jwt.Parser
 			token, _, _ := p.ParseUnverified(accessToken, &jwt.StandardClaims{})
 			if err := token.Claims.Valid(); err != nil {
 				//invalid
-				RedirectLogin(w)
+				RedirectLogin(w, req)
 				//return
 			} else {
 				//valid
@@ -157,9 +192,18 @@ func ValidateToken(next http.HandlerFunc) http.HandlerFunc {
 				//return
 			}
 		}
-		//RedirectLogin(w)
+		//RedirectLogin(w, r)
 		return
 	})
+}
+
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
 }
 
 func main() {
@@ -181,7 +225,7 @@ func main() {
 	if len(os.Getenv("UI_SSL_KEY")) == 0 {
 		log.Fatalln("UI_SSL_KEY env var not set")
 	}
-
+	gob.Register(Flash{})
 	log.SetFlags(log.Ldate | log.Ltime)
 	r := mux.NewRouter()
 	r.HandleFunc("/login", Login)
@@ -189,6 +233,7 @@ func main() {
 	r.HandleFunc("/get", ValidateToken(GetCredentials))
 	r.HandleFunc("/delete", ValidateToken(DeleteCredentials))
 	r.HandleFunc("/generate/{credtype}", ValidateToken(GenerateCredentials))
+	r.HandleFunc("/set/{credtype}", ValidateToken(SetCredentials))
 	r.HandleFunc("/favicon.ico", FaviconHandler)
 	r.HandleFunc("/", ValidateToken(ListCredentials))
 

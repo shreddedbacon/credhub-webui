@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"html/template"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
@@ -41,13 +42,13 @@ type PasswordParameters struct {
 }
 
 func GenerateCredentials(w http.ResponseWriter, r *http.Request) {
-	session := GetSession(w, r)
+	session := GetSession(w, r, cookieName)
 	muxvars := mux.Vars(r)
 	credType := muxvars["credtype"]
 	accessToken := session.Values["access_token"].(string)
 	if r.Method == http.MethodPost {
 		switch credType {
-		case "pass":
+		case "password":
 			credName := r.FormValue("name")
 			r.ParseForm()
 			//get checkbox values
@@ -70,7 +71,7 @@ func GenerateCredentials(w http.ResponseWriter, r *http.Request) {
 				Type:       "password",
 				Parameters: params,
 			}
-			PostCredentials(w, passw, accessToken)
+			PostCredentials(w, r, passw, accessToken)
 		case "user":
 			credName := r.FormValue("name")
 			r.ParseForm()
@@ -96,7 +97,7 @@ func GenerateCredentials(w http.ResponseWriter, r *http.Request) {
 				Type:       "user",
 				Parameters: params,
 			}
-			PostCredentials(w, passw, accessToken)
+			PostCredentials(w, r, passw, accessToken)
 		case "certificate":
 			credName := r.FormValue("name")
 			r.ParseForm()
@@ -132,7 +133,7 @@ func GenerateCredentials(w http.ResponseWriter, r *http.Request) {
 				Type:       "certificate",
 				Parameters: params,
 			}
-			PostCredentials(w, passw, accessToken)
+			PostCredentials(w, r, passw, accessToken)
 		case "rsa":
 			credName := r.FormValue("name")
 			r.ParseForm()
@@ -144,7 +145,7 @@ func GenerateCredentials(w http.ResponseWriter, r *http.Request) {
 				Type:       "rsa",
 				Parameters: params,
 			}
-			PostCredentials(w, passw, accessToken)
+			PostCredentials(w, r, passw, accessToken)
 		case "ssh":
 			credName := r.FormValue("name")
 			r.ParseForm()
@@ -159,13 +160,12 @@ func GenerateCredentials(w http.ResponseWriter, r *http.Request) {
 				Type:       "ssh",
 				Parameters: params,
 			}
-			PostCredentials(w, passw, accessToken)
+			PostCredentials(w, r, passw, accessToken)
 		default:
-			RedirectHome(w)
+			http.Redirect(w, r, "/", http.StatusSeeOther)
 			return
 		}
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		fmt.Fprint(w, "<meta http-equiv=\"refresh\" content=\"0;URL='/'\" />")
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 	} else {
 		if stringInSlice(credType, []string{"password", "user", "certificate", "rsa", "ssh"}) {
 			tmpl := template.Must(template.ParseFiles("templates/generate/" + credType + ".html"))
@@ -177,16 +177,7 @@ func GenerateCredentials(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func stringInSlice(a string, list []string) bool {
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
-}
-
-func PostCredentials(w http.ResponseWriter, credential PasswordStruct, accessToken string) {
+func PostCredentials(w http.ResponseWriter, r *http.Request, credential interface{}, accessToken string) {
 	apiQuery := "/api/v1/data"
 	var netClient = &http.Client{
 		Timeout: time.Second * 10,
@@ -202,5 +193,8 @@ func PostCredentials(w http.ResponseWriter, credential PasswordStruct, accessTok
 		http.Error(w, "Error", http.StatusBadRequest)
 		return
 	}
+	body, _ := ioutil.ReadAll(resp.Body)
+	flashMessage := []byte(body)
+	CheckError(w, r, flashMessage, "Successfully generated credential", "success")
 	defer resp.Body.Close()
 }
