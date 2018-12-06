@@ -29,7 +29,12 @@
             <th class="table-dark" colspan=4>Values</th>
           </tr>
           <tr>
-            <td colspan=4 class="dont-break-out"><pre class="dont-break-out">{{ .Value }}</pre></td>
+            <script>
+              var data = JSON.parse({{ .Value | MapToString }});
+              console.log(data);
+              document.getElementById("{{.ID}}").innerHTML = JSON.stringify(data, undefined, 2);
+            </script>
+            <td colspan=4 class="dont-break-out"><pre id="{{.ID}}" class="dont-break-out"></pre></td>
           </tr>
 {{/* this would be good if it could iterate over an unknown structure some how
 {{ range $key, $value := .Value }}
