@@ -31,9 +31,21 @@ View a generated credential
 
 # Build
 ```
+go get -v .
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o credhub-webui .
+```
+
+# Run
+```
+./credhub-webui -ui-ssl-cert server.crt -ui-ssl-key server.key -cookie-key "super-secret-key" -cookie-name "auth-cookie" -credhub-server "https://192.168.50.6:8844"
+```
+
+# Docker
+## Build
+```
 docker build -t shreddedbacon/credhub-webui .
 ```
-# Run
+## Run
 ```
 docker run -p 8443:8443 -e CREDHUB_SERVER=https://<ip>:<port> shreddedbacon/credhub-webui
 ```
