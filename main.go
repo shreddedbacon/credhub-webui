@@ -180,7 +180,9 @@ func ValidateToken(next http.HandlerFunc) http.HandlerFunc {
 		if setbool == true && accessToken == "" {
 			RedirectLogin(w, req)
 			//return
-		} else {
+		} else if setbool == false {
+      RedirectLogin(w, req)
+    } else {
 			var p jwt.Parser
 			token, _, _ := p.ParseUnverified(accessToken, &jwt.StandardClaims{})
 			if err := token.Claims.Valid(); err != nil {
