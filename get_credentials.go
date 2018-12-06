@@ -227,7 +227,10 @@ func GetCredentials(w http.ResponseWriter, r *http.Request) {
 				},
 				Flash: flash,
 			}
-			tmpl := template.Must(template.ParseFiles("templates/getcredentials/json.html"))
+      tf := template.FuncMap{
+        "MapToString": MapToString,
+	    }
+			tmpl := template.Must(template.New("json.html").Funcs(tf).ParseFiles("templates/getcredentials/json.html"))
 			tmpl.ExecuteTemplate(w, "base", data3)
 			return
 		default:
@@ -250,4 +253,9 @@ func GetCredentials(w http.ResponseWriter, r *http.Request) {
 	// go home if no conditions met
 	RedirectHome(w, r)
 	return
+}
+
+func MapToString(mapVal map[string]interface{}) string {
+	retBytes, _ := json.Marshal(mapVal)
+	return string(retBytes)
 }
