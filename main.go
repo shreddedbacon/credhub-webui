@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"time"
+  "flag"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
@@ -43,8 +44,8 @@ type AuthServerResponse struct {
 
 var (
 	// key must be 16, 24 or 32 bytes long (AES-128, AES-192 or AES-256)
-	keyval        = os.Getenv("COOKIE_KEY")
-	key           = []byte(keyval)
+	keyVal        = os.Getenv("COOKIE_KEY")
+	key           = []byte(keyVal)
 	store         = sessions.NewCookieStore(key)
 	credhubServer = os.Getenv("CREDHUB_SERVER")
 	uiSslCert     = os.Getenv("UI_SSL_CERT")
@@ -207,24 +208,50 @@ func stringInSlice(a string, list []string) bool {
 }
 
 func main() {
-	if len(os.Getenv("COOKIE_KEY")) == 0 {
-		log.Fatalln("COOKIE_KEY env var not set")
-	}
+  keyValVar := flag.String("cookie-key", "", "Must be 16, 24 or 32 bytes long (AES-128, AES-192 or AES-256)")
+  cookieNameVar := flag.String("cookie-name", "auth-cookie", "Name of the cookie to use (auth-cookie)")
+  credhubServerVar := flag.String("credhub-server", "", "URL of CredHub server to target (https://<ip-or-host>:<port>)")
+  uiSslCertVar := flag.String("ui-ssl-cert", "", "SSL certificate for the web frontend (server.crt)")
+  uiSslKeyVar := flag.String("ui-ssl-key", "", "SSL certificate key for the web frontend (server.key)")
+  flag.Parse()
 	if len(os.Getenv("CREDHUB_SERVER")) == 0 {
-		log.Fatalln("CREDHUB_SERVER env var not set")
+    if *credhubServerVar != "" {
+      credhubServer = *credhubServerVar
+    } else {
+      log.Fatalln("CREDHUB_SERVER not set")
+    }
 	}
 	if len(os.Getenv("COOKIE_NAME")) == 0 {
-		log.Fatalln("COOKIE_NAME env var not set")
+		if *cookieNameVar != "" {
+      cookieName = *cookieNameVar
+    } else {
+      log.Fatalln("COOKIE_NAME not set")
+    }
 	}
 	if len(os.Getenv("COOKIE_KEY")) == 0 {
-		log.Fatalln("COOKIE_KEY env var not set")
+    if *keyValVar != "" {
+      keyVal = *keyValVar
+    	key = []byte(keyVal)
+    	store = sessions.NewCookieStore(key)
+    } else {
+      log.Fatalln("COOKIE_NAME not set")
+    }
 	}
 	if len(os.Getenv("UI_SSL_CERT")) == 0 {
-		log.Fatalln("UI_SSL_CERT env var not set")
+    if *uiSslCertVar != "" {
+      uiSslCert = *uiSslCertVar
+    } else {
+      log.Fatalln("UI_SSL_CERT not set")
+    }
 	}
 	if len(os.Getenv("UI_SSL_KEY")) == 0 {
-		log.Fatalln("UI_SSL_KEY env var not set")
+    if *uiSslKeyVar != "" {
+      uiSslKey = *uiSslKeyVar
+    } else {
+      log.Fatalln("UI_SSL_KEY not set")
+    }
 	}
+
 	gob.Register(Flash{})
 	log.SetFlags(log.Ldate | log.Ltime)
 	r := mux.NewRouter()
