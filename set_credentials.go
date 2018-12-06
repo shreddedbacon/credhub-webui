@@ -23,7 +23,7 @@ type SetCredentialValueStruct struct {
 type SetCredentialStruct struct {
 	Name  string          `json:"name"`
 	Type  string          `json:"type"`
-	Value ValueParameters `json:"value"`
+	Value interface{} `json:"value"`
 }
 
 type ValueParameters struct {
@@ -49,7 +49,7 @@ func SetCredentials(w http.ResponseWriter, r *http.Request) {
 			//create payload
 			setValue := SetCredentialValueStruct{
 				Name:  credName,
-				Type:  "value",
+				Type:  credType,
 				Value: value,
 			}
 			PutCredentials(w, r, setValue, accessToken)
@@ -60,8 +60,22 @@ func SetCredentials(w http.ResponseWriter, r *http.Request) {
 			//create payload
 			setValue := SetCredentialValueStruct{
 				Name:  credName,
-				Type:  "password",
+				Type:  credType,
 				Value: value,
+			}
+			PutCredentials(w, r, setValue, accessToken)
+		case "json":
+			credName := r.FormValue("name")
+			r.ParseForm()
+			value := strings.Join(r.Form["value"], "")
+			//create payload
+      fmt.Println(value)
+      var rawJson map[string]interface{}
+      json.Unmarshal([]byte(value), &rawJson)
+			setValue := SetCredentialStruct{
+				Name:  credName,
+				Type:  credType,
+				Value: rawJson,
 			}
 			PutCredentials(w, r, setValue, accessToken)
 		case "user":
@@ -76,7 +90,7 @@ func SetCredentials(w http.ResponseWriter, r *http.Request) {
 			}
 			setValue := SetCredentialStruct{
 				Name:  credName,
-				Type:  "user",
+				Type:  credType,
 				Value: values,
 			}
 			PutCredentials(w, r, setValue, accessToken)
@@ -94,7 +108,39 @@ func SetCredentials(w http.ResponseWriter, r *http.Request) {
 			}
 			setValue := SetCredentialStruct{
 				Name:  credName,
-				Type:  "certificate",
+				Type:  credType,
+				Value: values,
+			}
+			PutCredentials(w, r, setValue, accessToken)
+		case "rsa":
+			credName := r.FormValue("name")
+			r.ParseForm()
+			publicKey := strings.Join(r.Form["public_key"], "")
+			privateKey := strings.Join(r.Form["private_key"], "")
+			//create payload
+			values := ValueParameters{
+				PublicKey: publicKey,
+				PrivateKey:  privateKey,
+			}
+			setValue := SetCredentialStruct{
+				Name:  credName,
+				Type:  credType,
+				Value: values,
+			}
+			PutCredentials(w, r, setValue, accessToken)
+		case "ssh":
+			credName := r.FormValue("name")
+			r.ParseForm()
+			publicKey := strings.Join(r.Form["public_key"], "")
+			privateKey := strings.Join(r.Form["private_key"], "")
+			//create payload
+			values := ValueParameters{
+				PublicKey: publicKey,
+				PrivateKey:  privateKey,
+			}
+			setValue := SetCredentialStruct{
+				Name:  credName,
+				Type:  credType,
 				Value: values,
 			}
 			PutCredentials(w, r, setValue, accessToken)
