@@ -69,7 +69,6 @@ func SetCredentials(w http.ResponseWriter, r *http.Request) {
 			r.ParseForm()
 			value := strings.Join(r.Form["value"], "")
 			//create payload
-      fmt.Println(value)
       var rawJson map[string]interface{}
       json.Unmarshal([]byte(value), &rawJson)
 			setValue := SetCredentialStruct{
@@ -150,7 +149,6 @@ func SetCredentials(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 	} else {
 		if stringInSlice(credType, []string{"password", "user", "certificate", "rsa", "ssh", "json", "value"}) {
-			fmt.Println(credType)
 			tmpl := template.Must(template.ParseFiles("templates/set/" + credType + ".html"))
 			tmpl.ExecuteTemplate(w, "base", nil)
 		} else {
