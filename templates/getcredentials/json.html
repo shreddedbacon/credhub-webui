@@ -31,7 +31,6 @@
           <tr>
             <script>
               var data = JSON.parse({{ .Value | MapToString }});
-              console.log(data);
               document.getElementById("{{.ID}}").innerHTML = JSON.stringify(data, undefined, 2);
             </script>
             <td colspan=4 class="dont-break-out"><pre id="{{.ID}}" class="dont-break-out"></pre></td>
