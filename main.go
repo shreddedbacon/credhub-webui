@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"encoding/gob"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"html/template"
 	"io/ioutil"
@@ -12,17 +13,11 @@ import (
 	"net/http"
 	"os"
 	"time"
-  "flag"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 )
-
-type ClientStruct struct {
-	ClientID     string
-	ClientSecret string
-}
 
 type AuthResponse struct {
 	AccessToken string `json:"access_token"`
@@ -51,6 +46,8 @@ var (
 	uiSslCert     = os.Getenv("UI_SSL_CERT")
 	uiSslKey      = os.Getenv("UI_SSL_KEY")
 	cookieName    = os.Getenv("COOKIE_NAME")
+	clientID      = os.Getenv("CLIENT_ID")
+	clientSecret  = os.Getenv("CLIENT_SECRET")
 )
 
 type CredentialsData struct {
@@ -181,8 +178,8 @@ func ValidateToken(next http.HandlerFunc) http.HandlerFunc {
 			RedirectLogin(w, req)
 			//return
 		} else if setbool == false {
-      RedirectLogin(w, req)
-    } else {
+			RedirectLogin(w, req)
+		} else {
 			var p jwt.Parser
 			token, _, _ := p.ParseUnverified(accessToken, &jwt.StandardClaims{})
 			if err := token.Claims.Valid(); err != nil {
@@ -210,52 +207,74 @@ func stringInSlice(a string, list []string) bool {
 }
 
 func main() {
-  keyValVar := flag.String("cookie-key", "", "Must be 16, 24 or 32 bytes long (AES-128, AES-192 or AES-256)")
-  cookieNameVar := flag.String("cookie-name", "auth-cookie", "Name of the cookie to use (auth-cookie)")
-  credhubServerVar := flag.String("credhub-server", "", "URL of CredHub server to target (https://<ip-or-host>:<port>)")
-  uiSslCertVar := flag.String("ui-ssl-cert", "", "SSL certificate for the web frontend (server.crt)")
-  uiSslKeyVar := flag.String("ui-ssl-key", "", "SSL certificate key for the web frontend (server.key)")
-  flag.Parse()
+	keyValVar := flag.String("cookie-key", "", "Must be 16, 24 or 32 bytes long (AES-128, AES-192 or AES-256)")
+	cookieNameVar := flag.String("cookie-name", "auth-cookie", "Name of the cookie to use (auth-cookie)")
+	credhubServerVar := flag.String("credhub-server", "", "URL of CredHub server to target (https://<ip-or-host>:<port>)")
+	uiSslCertVar := flag.String("ui-ssl-cert", "", "SSL certificate for the web frontend (server.crt)")
+	uiSslKeyVar := flag.String("ui-ssl-key", "", "SSL certificate key for the web frontend (server.key)")
+	clientIDVar := flag.String("client-id", "", "Client ID that has credhub.read and credhub.write authorization")
+	clientSecretVar := flag.String("client-secret", "", "Secret for the Client ID")
+	flag.Parse()
 	if len(os.Getenv("CREDHUB_SERVER")) == 0 {
-    if *credhubServerVar != "" {
-      credhubServer = *credhubServerVar
-    } else {
-      log.Fatalln("CREDHUB_SERVER not set")
-    }
+		if *credhubServerVar != "" {
+			credhubServer = *credhubServerVar
+		} else {
+			log.Fatalln("CREDHUB_SERVER not set")
+		}
 	}
 	if len(os.Getenv("COOKIE_NAME")) == 0 {
 		if *cookieNameVar != "" {
-      cookieName = *cookieNameVar
-    } else {
-      log.Fatalln("COOKIE_NAME not set")
-    }
+			cookieName = *cookieNameVar
+		} else {
+			log.Fatalln("COOKIE_NAME not set")
+		}
 	}
 	if len(os.Getenv("COOKIE_KEY")) == 0 {
-    if *keyValVar != "" {
-      keyVal = *keyValVar
-    	key = []byte(keyVal)
-    	store = sessions.NewCookieStore(key)
-    } else {
-      log.Fatalln("COOKIE_NAME not set")
-    }
+		if *keyValVar != "" {
+			keyVal = *keyValVar
+			key = []byte(keyVal)
+			store = sessions.NewCookieStore(key)
+		} else {
+			log.Fatalln("COOKIE_NAME not set")
+		}
 	}
 	if len(os.Getenv("UI_SSL_CERT")) == 0 {
-    if *uiSslCertVar != "" {
-      uiSslCert = *uiSslCertVar
-    } else {
-      log.Fatalln("UI_SSL_CERT not set")
-    }
+		if *uiSslCertVar != "" {
+			uiSslCert = *uiSslCertVar
+		} else {
+			log.Fatalln("UI_SSL_CERT not set")
+		}
 	}
 	if len(os.Getenv("UI_SSL_KEY")) == 0 {
-    if *uiSslKeyVar != "" {
-      uiSslKey = *uiSslKeyVar
-    } else {
-      log.Fatalln("UI_SSL_KEY not set")
-    }
+		if *uiSslKeyVar != "" {
+			uiSslKey = *uiSslKeyVar
+		} else {
+			log.Fatalln("UI_SSL_KEY not set")
+		}
+	}
+	if len(os.Getenv("CLIENT_ID")) == 0 {
+		if *clientIDVar != "" {
+			clientID = *clientIDVar
+		} else {
+			log.Fatalln("CLIENT_ID not set")
+		}
+	}
+	if len(os.Getenv("CLIENT_SECRET")) == 0 {
+		if *clientSecretVar != "" {
+			clientSecret = *clientSecretVar
+		} else {
+			clientSecret = "" //allow empty secret?
+			//log.Fatalln("CLIENT_SECRET not set")
+		}
 	}
 
 	gob.Register(Flash{})
 	log.SetFlags(log.Ldate | log.Ltime)
+	store.Options = &sessions.Options{
+		Path:     "/",
+		MaxAge:   86400,
+		HttpOnly: true,
+	}
 	r := mux.NewRouter()
 	r.HandleFunc("/login", Login)
 	r.HandleFunc("/logout", Logout)
