@@ -29,6 +29,9 @@ Generate a credential
 View a generated credential
 ![view generated](https://github.com/shreddedbacon/credhub-webui/blob/master/screenshots/06-view_generated.png)
 
+# Deploy
+Use BOSH to deploy this, see [this](https://github.com/shreddedbacon/credhub-webui-boshrelease) BOSH release
+
 # Build
 ```
 go get -v .
