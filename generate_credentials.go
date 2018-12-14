@@ -41,6 +41,9 @@ type PasswordParameters struct {
 	SSHComment       string `json:"ssh_comment,omitempty"`
 }
 
+/*
+  generate a credential for CredHub
+  */
 func GenerateCredentials(w http.ResponseWriter, r *http.Request) {
 	session := GetSession(w, r, cookieName)
 	muxvars := mux.Vars(r)
@@ -177,6 +180,9 @@ func GenerateCredentials(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+/*
+  function to actually post it into CredHub
+  */
 func PostCredentials(w http.ResponseWriter, r *http.Request, credential interface{}, accessToken string) {
 	apiQuery := "/api/v1/data"
 	var netClient = &http.Client{

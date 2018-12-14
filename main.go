@@ -48,6 +48,7 @@ var (
 	cookieName    = os.Getenv("COOKIE_NAME")
 	clientID      = os.Getenv("CLIENT_ID")
 	clientSecret  = os.Getenv("CLIENT_SECRET")
+	uiUrl         = os.Getenv("UI_URL") //used for callback url
 )
 
 type CredentialsData struct {
@@ -214,6 +215,7 @@ func main() {
 	uiSslKeyVar := flag.String("ui-ssl-key", "", "SSL certificate key for the web frontend (server.key)")
 	clientIDVar := flag.String("client-id", "", "Client ID that has credhub.read and credhub.write authorization")
 	clientSecretVar := flag.String("client-secret", "", "Secret for the Client ID")
+	uiUrlVar := flag.String("ui-url", "", "URL of this UI (https://<ip-or-host>:<port>)")
 	flag.Parse()
 	if len(os.Getenv("CREDHUB_SERVER")) == 0 {
 		if *credhubServerVar != "" {
@@ -267,6 +269,13 @@ func main() {
 			//log.Fatalln("CLIENT_SECRET not set")
 		}
 	}
+	if len(os.Getenv("UI_URL")) == 0 {
+		if *uiUrlVar != "" {
+			uiUrl = *uiUrlVar
+		} else {
+			log.Fatalln("UI_URL not set")
+		}
+	}
 
 	gob.Register(Flash{})
 	log.SetFlags(log.Ldate | log.Ltime)
@@ -277,6 +286,7 @@ func main() {
 	}
 	r := mux.NewRouter()
 	r.HandleFunc("/login", Login)
+	r.HandleFunc("/login/callback", LoginCallback)
 	r.HandleFunc("/logout", Logout)
 	r.HandleFunc("/get", ValidateToken(GetCredentials))
 	r.HandleFunc("/delete", ValidateToken(DeleteCredentials))

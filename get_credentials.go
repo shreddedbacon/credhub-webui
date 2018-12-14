@@ -112,6 +112,9 @@ type GetCredentialCert struct {
 	} `json:"data"`
 }
 
+/*
+  get a credential from CredHub
+  */
 func GetCredentials(w http.ResponseWriter, r *http.Request) {
 	session := GetSession(w, r, cookieName)
 	// api call to make
@@ -255,6 +258,9 @@ func GetCredentials(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+/*
+  turn map into string for json display in view
+  */
 func MapToString(mapVal map[string]interface{}) string {
 	retBytes, _ := json.Marshal(mapVal)
 	return string(retBytes)

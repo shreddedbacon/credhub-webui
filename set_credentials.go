@@ -35,6 +35,9 @@ type ValueParameters struct {
 	PublicKey   string `json:"public_key,omitempty"`
 }
 
+/*
+  set a credential for CredHub
+  */
 func SetCredentials(w http.ResponseWriter, r *http.Request) {
 	session := GetSession(w, r, cookieName)
 	muxvars := mux.Vars(r)
@@ -158,6 +161,9 @@ func SetCredentials(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+/*
+  actually put the credential into CredHub
+  */
 func PutCredentials(w http.ResponseWriter, r *http.Request, credential interface{}, accessToken string) {
 	apiQuery := "/api/v1/data"
 	var netClient = &http.Client{

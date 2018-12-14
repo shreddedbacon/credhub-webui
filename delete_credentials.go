@@ -8,6 +8,9 @@ import (
 	"time"
 )
 
+/*
+  Delete a credential from CredHub
+  */
 func DeleteCredentials(w http.ResponseWriter, r *http.Request) {
 	session := GetSession(w, r, cookieName)
 	// api call to make
