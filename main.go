@@ -26,6 +26,7 @@ type AuthResponse struct {
 	Scope       string `json:"scope"`
 	Error       string `json:"error"`
 	ErrorDesc   string `json:"error_description"`
+	ClientID    string `json:"client_id"`
 }
 
 type AuthServerResponse struct {
@@ -61,6 +62,7 @@ type CredentialsData struct {
 type CredentialPageData struct {
 	PageTitle   string
 	Credentials []CredentialsData
+	UserName    string
 	Flash       Flash
 }
 
@@ -108,12 +110,22 @@ func ListCredentials(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Println(err)
 	}
+	var p jwt.Parser
+	claims := jwt.MapClaims{}
+	_, _, _ = p.ParseUnverified(accessToken, claims)
+	userNameVal := ""
+	if val, ok := claims["user_name"]; ok {
+		userNameVal = val.(string)
+	} else {
+		userNameVal = claims["client_id"].(string)
+	}
 	data := CredentialPageData{
 		PageTitle: "List Credentials",
 		Credentials: []CredentialsData{
 			credResp,
 		},
-		Flash: flash,
+		UserName: userNameVal,
+		Flash:    flash,
 	}
 	// use template
 	tmpl := template.Must(template.ParseFiles("templates/credentials.html", "templates/base.html"))
