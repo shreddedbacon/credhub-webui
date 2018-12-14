@@ -75,7 +75,7 @@ https://localhost:8443
     groups: [credhub.write, credhub.read]
     password: credhub
 
-# add a credhub webu client and button to uaa portal
+# add a credhub webui client and button to uaa portal
 - type: replace
   path: /instance_groups/name=bosh/jobs/name=uaa/properties/uaa/clients/credhub_webui?
   value:
@@ -85,7 +85,7 @@ https://localhost:8443
     authorities: ""
     access-token-validity: 300
     refresh-token-validity: 1800
-    secret: ""
+    secret: "credhubsecret"
     autoapprove: true
     override: true
     redirect-uri: https://localhost:8443/login/callback
