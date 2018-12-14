@@ -13,33 +13,33 @@
         <thead class="thead-dark">
           <tr>
             <th>Name</th>
-            <th>ID</th>
-            <th>Type</th>
-            <th>Created</th>
+            <th>Info</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td>{{.Name}}</td>
-            <td>{{.ID}}</td>
-            <td>{{.Type}}</td>
-            <td>{{.VersionCreatedAt}}</td>
+            <td>
+              <span class="badge badge-secondary">ID: {{.ID}}</span></br>
+              <span class="badge badge-info">Created: {{.VersionCreatedAt}}</span></br>
+              <span class="badge badge-primary">Type: {{.Type}}</span>
+            </td>
           </tr>
           <tr>
-            <th class="table-dark" colspan=4>Values</th>
+            <th class="table-dark" colspan=2>Values</th>
           </tr>
           <tr>
             <script>
               var data = JSON.parse({{ .Value | MapToString }});
               document.getElementById("{{.ID}}").innerHTML = JSON.stringify(data, undefined, 2);
             </script>
-            <td colspan=4 class="dont-break-out"><pre id="{{.ID}}" class="dont-break-out"></pre></td>
+            <td colspan=2 class="dont-break-out"><pre id="{{.ID}}" class="dont-break-out"></pre></td>
           </tr>
 {{/* this would be good if it could iterate over an unknown structure some how
 {{ range $key, $value := .Value }}
           <tr>
             <td>{{ $key }}</td>
-            <td colspan=3 class="dont-break-out"><pre class="dont-break-out">{{ $value }}</pre></td>
+            <td class="dont-break-out"><pre class="dont-break-out">{{ $value }}</pre></td>
           </tr>
 {{ end }}
 */}}
