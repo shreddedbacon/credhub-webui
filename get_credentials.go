@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -114,7 +113,7 @@ type GetCredentialCert struct {
 
 /*
   get a credential from CredHub
-  */
+*/
 func GetCredentials(w http.ResponseWriter, r *http.Request) {
 	session := GetSession(w, r, cookieName)
 	// api call to make
@@ -130,7 +129,6 @@ func GetCredentials(w http.ResponseWriter, r *http.Request) {
 	var netClient = &http.Client{
 		Timeout: time.Second * 10,
 	}
-	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //ignore cert for now FIX: add credhub and uaa certificate as environment variables on startup
 	req, _ := http.NewRequest("GET", credhubServer+apiQuery, bytes.NewBuffer([]byte("")))
 	req.Header.Add("authorization", "bearer "+accessToken)
 	req.Header.Set("Content-Type", "application/json")
@@ -230,9 +228,9 @@ func GetCredentials(w http.ResponseWriter, r *http.Request) {
 				},
 				Flash: flash,
 			}
-      tf := template.FuncMap{
-        "MapToString": MapToString,
-	    }
+			tf := template.FuncMap{
+				"MapToString": MapToString,
+			}
 			tmpl := template.Must(template.New("json.html").Funcs(tf).ParseFiles("templates/getcredentials/json.html"))
 			tmpl.ExecuteTemplate(w, "base", data3)
 			return
@@ -260,7 +258,7 @@ func GetCredentials(w http.ResponseWriter, r *http.Request) {
 
 /*
   turn map into string for json display in view
-  */
+*/
 func MapToString(mapVal map[string]interface{}) string {
 	retBytes, _ := json.Marshal(mapVal)
 	return string(retBytes)

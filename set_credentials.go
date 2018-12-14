@@ -2,14 +2,12 @@ package main
 
 import (
 	"bytes"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
 	"html/template"
-	"net/http"
-	//"strconv"
 	"io/ioutil"
+	"net/http"
 	"strings"
 	"time"
 )
@@ -21,8 +19,8 @@ type SetCredentialValueStruct struct {
 }
 
 type SetCredentialStruct struct {
-	Name  string          `json:"name"`
-	Type  string          `json:"type"`
+	Name  string      `json:"name"`
+	Type  string      `json:"type"`
 	Value interface{} `json:"value"`
 }
 
@@ -37,7 +35,7 @@ type ValueParameters struct {
 
 /*
   set a credential for CredHub
-  */
+*/
 func SetCredentials(w http.ResponseWriter, r *http.Request) {
 	session := GetSession(w, r, cookieName)
 	muxvars := mux.Vars(r)
@@ -72,8 +70,8 @@ func SetCredentials(w http.ResponseWriter, r *http.Request) {
 			r.ParseForm()
 			value := strings.Join(r.Form["value"], "")
 			//create payload
-      var rawJson map[string]interface{}
-      json.Unmarshal([]byte(value), &rawJson)
+			var rawJson map[string]interface{}
+			json.Unmarshal([]byte(value), &rawJson)
 			setValue := SetCredentialStruct{
 				Name:  credName,
 				Type:  credType,
@@ -121,8 +119,8 @@ func SetCredentials(w http.ResponseWriter, r *http.Request) {
 			privateKey := strings.Join(r.Form["private_key"], "")
 			//create payload
 			values := ValueParameters{
-				PublicKey: publicKey,
-				PrivateKey:  privateKey,
+				PublicKey:  publicKey,
+				PrivateKey: privateKey,
 			}
 			setValue := SetCredentialStruct{
 				Name:  credName,
@@ -137,8 +135,8 @@ func SetCredentials(w http.ResponseWriter, r *http.Request) {
 			privateKey := strings.Join(r.Form["private_key"], "")
 			//create payload
 			values := ValueParameters{
-				PublicKey: publicKey,
-				PrivateKey:  privateKey,
+				PublicKey:  publicKey,
+				PrivateKey: privateKey,
 			}
 			setValue := SetCredentialStruct{
 				Name:  credName,
@@ -163,13 +161,12 @@ func SetCredentials(w http.ResponseWriter, r *http.Request) {
 
 /*
   actually put the credential into CredHub
-  */
+*/
 func PutCredentials(w http.ResponseWriter, r *http.Request, credential interface{}, accessToken string) {
 	apiQuery := "/api/v1/data"
 	var netClient = &http.Client{
 		Timeout: time.Second * 10,
 	}
-	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //ignore cert for now FIX: add credhub and uaa certificate as environment variables on startup
 	jsonStr, _ := json.Marshal(credential)
 	req, _ := http.NewRequest("PUT", credhubServer+apiQuery, bytes.NewBuffer(jsonStr))
 	req.Header.Add("authorization", "bearer "+accessToken)

@@ -296,6 +296,9 @@ func main() {
 		MaxAge:   86400,
 		HttpOnly: true,
 	}
+
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //ignore cert for now FIX: add credhub and uaa certificate as environment variables on startup
+
 	r := mux.NewRouter()
 	r.HandleFunc("/login", Login)
 	r.HandleFunc("/login/callback", LoginCallback)

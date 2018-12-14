@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
@@ -43,7 +42,7 @@ type PasswordParameters struct {
 
 /*
   generate a credential for CredHub
-  */
+*/
 func GenerateCredentials(w http.ResponseWriter, r *http.Request) {
 	session := GetSession(w, r, cookieName)
 	muxvars := mux.Vars(r)
@@ -182,13 +181,12 @@ func GenerateCredentials(w http.ResponseWriter, r *http.Request) {
 
 /*
   function to actually post it into CredHub
-  */
+*/
 func PostCredentials(w http.ResponseWriter, r *http.Request, credential interface{}, accessToken string) {
 	apiQuery := "/api/v1/data"
 	var netClient = &http.Client{
 		Timeout: time.Second * 10,
 	}
-	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //ignore cert for now FIX: add credhub and uaa certificate as environment variables on startup
 	jsonStr, _ := json.Marshal(credential)
 	req, _ := http.NewRequest("POST", credhubServer+apiQuery, bytes.NewBuffer(jsonStr))
 	req.Header.Add("authorization", "bearer "+accessToken)

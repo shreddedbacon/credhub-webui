@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"crypto/tls"
 	"fmt"
 	"net/http"
 	"time"
@@ -10,7 +9,7 @@ import (
 
 /*
   Delete a credential from CredHub
-  */
+*/
 func DeleteCredentials(w http.ResponseWriter, r *http.Request) {
 	session := GetSession(w, r, cookieName)
 	// api call to make
@@ -26,7 +25,6 @@ func DeleteCredentials(w http.ResponseWriter, r *http.Request) {
 	var netClient = &http.Client{
 		Timeout: time.Second * 10,
 	}
-	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //ignore cert for now FIX: add credhub and uaa certificate as environment variables on startup
 	req, _ := http.NewRequest("DELETE", credhubServer+apiQuery, bytes.NewBuffer([]byte("")))
 	req.Header.Add("authorization", "bearer "+accessToken)
 	req.Header.Set("Content-Type", "application/json")

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -9,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/sessions"
@@ -16,7 +16,7 @@ import (
 
 type LoginStruct struct {
 	Success     bool
-	Flash       string
+	Flash       Flash
 	CallbackUrl string
 	AuthUrl     string
 }
@@ -46,34 +46,31 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	//already authd, render tmpl
 	ValidateAuthSession(session, w, r)
 
-	// get auth url from server
-	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //ignore cert for now
-	resp, err := http.Get(credhubServer + "/info")
+	flashsession := GetSession(w, r, "flash-cookie")
+	flashes := flashsession.Flashes()
+	var flash Flash
+	if len(flashes) > 0 {
+		flash = flashes[0].(Flash)
+	}
+	err := flashsession.Save(r, w)
 	if err != nil {
-		flash := Flash{
-			Type:    "warning",
-			Message: "Error connecting to authorization server",
-		}
-		response := LoginStruct{
-			Flash: flash.Message,
-		}
-		tmpl.Execute(w, response)
+		fmt.Println(err)
+	}
+
+	// get auth url from server
+	oAuthServer, authErr := GetOauthServer()
+	if authErr != nil {
+		tmpl.Execute(w, authErr)
+		RedirectHome(w, r) //FIX go to login and display error
 		return
 	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	authRespBytes := []byte(body)
-	authResp := AuthServerResponse{}
-	if authServErr := json.Unmarshal([]byte(authRespBytes), &authResp); err != nil {
-		fmt.Println(authServErr)
-	}
-	oAuthServer := authResp.AuthServer.URL
 
 	//if not authd and not a POST, render tmpl
 	if r.Method != http.MethodPost {
 		response := LoginStruct{
 			CallbackUrl: uiUrl,
 			AuthUrl:     oAuthServer,
+			Flash:       flash,
 		}
 		tmpl.Execute(w, response)
 		return
@@ -85,8 +82,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// post auth request
-	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //ignore cert for now FIX: add credhub and uaa certificate as environment variables on startup
-	resp, err = http.PostForm(oAuthServer+"/oauth/token", url.Values{
+	resp, err := http.PostForm(oAuthServer+"/oauth/token", url.Values{
 		"client_id":     {loginCreds.ClientID},
 		"client_secret": {loginCreds.ClientSecret},
 		"grant_type":    {"client_credentials"},
@@ -97,7 +93,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	defer resp.Body.Close()
-	body, _ = ioutil.ReadAll(resp.Body)
+	body, _ := ioutil.ReadAll(resp.Body)
 	textBytes := []byte(body)
 	list := AuthResponse{}
 	if err := json.Unmarshal([]byte(textBytes), &list); err != nil {
@@ -107,6 +103,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		flash := Flash{
 			Type:    "notice",
 			Message: list.ErrorDesc,
+			Display: true,
 		}
 		session.AddFlash(flash)
 	}
@@ -119,7 +116,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			flash := flashes[0].(Flash)
 			response := LoginStruct{
 				Success:     true,
-				Flash:       flash.Message,
+				Flash:       flash,
 				CallbackUrl: uiUrl,
 				AuthUrl:     oAuthServer,
 			}
@@ -132,11 +129,11 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		}
 		tmpl.Execute(w, response)
 	}
-	flashes := session.Flashes()
+	flashes = session.Flashes()
 	if len(flashes) > 0 {
 		flash := flashes[0].(Flash)
 		response := LoginStruct{
-			Flash:       flash.Message,
+			Flash:       flash,
 			CallbackUrl: uiUrl,
 			AuthUrl:     oAuthServer,
 		}
@@ -163,44 +160,36 @@ func Logout(w http.ResponseWriter, r *http.Request) {
   call back function to interact with uaa
 */
 func LoginCallback(w http.ResponseWriter, r *http.Request) {
-	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //ignore cert for now
 	httpClient := http.Client{}
 	session := GetSession(w, r, cookieName)
-
+	param, ok := r.URL.Query()["error_description"]
+	if ok {
+		respParam := strings.Join(param, "")
+		AddFlash(w, r, respParam, "warning")
+		RedirectLogin(w, r)
+		return
+	}
 	// get auth url from server
-	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //ignore cert for now
-	resp, err := http.Get(credhubServer + "/info")
+	oAuthServer, err := GetOauthServer()
 	if err != nil {
 		RedirectHome(w, r) //FIX go to login and display error
 		return
 	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	authRespBytes := []byte(body)
-	authResp := AuthServerResponse{}
-	if authServErr := json.Unmarshal([]byte(authRespBytes), &authResp); err != nil {
-		fmt.Println(authServErr)
-	}
-	oAuthServer := authResp.AuthServer.URL
-	// get auth url from server
 
-	// First, we need to get the value of the `code` query param
+	// get code from query params
 	parseErr := r.ParseForm()
 	if parseErr != nil {
 		fmt.Fprintf(os.Stdout, "could not parse query: %v", err)
 		w.WriteHeader(http.StatusBadRequest)
 	}
 	code := r.FormValue("code")
-	// Next, lets for the HTTP request to call the github oauth enpoint
-	// to get our access token
+	// call the uaa auth endpoint
 	reqURL := fmt.Sprintf("%s/oauth/token?client_id=%s&client_secret=%s&code=%s&grant_type=authorization_code&redirect_uri=%s/login/callback", oAuthServer, clientID, clientSecret, code, uiUrl)
 	req, err := http.NewRequest(http.MethodPost, reqURL, nil)
 	if err != nil {
 		fmt.Fprintf(os.Stdout, "could not create HTTP request: %v", err)
 		w.WriteHeader(http.StatusBadRequest)
 	}
-	// We set this header since we want the response
-	// as JSON
 	req.Header.Set("accept", "application/json")
 	req.SetBasicAuth(clientID, clientSecret)
 
@@ -240,4 +229,29 @@ func ValidateAuthSession(session *sessions.Session, w http.ResponseWriter, r *ht
 		}
 	}
 	return
+}
+
+func GetOauthServer() (string, interface{}) {
+	// get auth url from server
+	resp, err := http.Get(credhubServer + "/info")
+	if err != nil {
+		flash := Flash{
+			Type:    "warning",
+			Message: "Error connecting to authorization server",
+			Display: true,
+		}
+		response := LoginStruct{
+			Flash: flash,
+		}
+		return "", response
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	authRespBytes := []byte(body)
+	authResp := AuthServerResponse{}
+	if authServErr := json.Unmarshal([]byte(authRespBytes), &authResp); err != nil {
+		fmt.Println(authServErr)
+	}
+	oAuthServer := authResp.AuthServer.URL
+	return oAuthServer, nil
 }
