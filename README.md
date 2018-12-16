@@ -42,7 +42,14 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o credhub-webui .
 
 # Run
 ```
-./credhub-webui -ui-ssl-cert server.crt -ui-ssl-key server.key -cookie-key "super-secret-key" -cookie-name "auth-cookie" -credhub-server "https://192.168.50.6:8844" -ui-url "https://localhost:8443" -client-id "credhub" -client-secret "credhubsecret"
+./credhub-webui -ui-ssl-cert server.crt \
+  -ui-ssl-key server.key \
+  -cookie-key "super-secret-key" \
+  -cookie-name "auth-cookie" \
+  -credhub-server "https://192.168.50.6:8844" \
+  -ui-url "https://localhost:8443" \
+  -client-id "credhub" \
+  -client-secret "credhubsecret"
 ```
 
 # Docker
@@ -52,11 +59,21 @@ docker build -t shreddedbacon/credhub-webui .
 ```
 ## Run
 ```
-docker run -p 8443:8443 -e CLIENT_ID=credhub -e CLIENT_SECRET=credhubsecret -e UI_URL=https://localhost:8443 -e CREDHUB_SERVER=https://<ip>:<port> shreddedbacon/credhub-webui
+docker run -p 8443:8443 \
+  -e CLIENT_ID=credhub \
+  -e CLIENT_SECRET=credhubsecret \
+  -e UI_URL=https://localhost:8443 \
+  -e CREDHUB_SERVER=https://<ip>:<port> \
+  shreddedbacon/credhub-webui
 ```
 E.g
 ```
-docker run -p 8443:8443 -e CLIENT_ID=credhub -e CLIENT_SECRET=credhubsecret -e UI_URL=https://localhost:8443 -e CREDHUB_SERVER=https://192.168.50.6:8844 shreddedbacon/credhub-webui
+docker run -p 8443:8443 \
+  -e CLIENT_ID=credhub \
+  -e CLIENT_SECRET=credhubsecret \
+  -e UI_URL=https://localhost:8443 \
+  -e CREDHUB_SERVER=https://192.168.50.6:8844 \
+  shreddedbacon/credhub-webui
 ```
 
 # Access
