@@ -1,65 +1,66 @@
 {{define "base"}}
-    <div class="modal-header">
-        {{.PageTitle}}
-    </div>
-    <div class="modal-body">
-        <div class="row">
-        <div class="col-md-12">
-        <div class="panel-body">
+{{$pagetitle := .PageTitle}}
+{{range .Credentials}}
+{{$var := index .Data 0}}
+<div class="modal-header bg-info text-white">
+  {{$pagetitle}}
+</div>
+<div class="modal-body">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="panel-body">
         <div class="table-responsive fixed-table-body">
-        {{range .Credentials}}
-        {{range .Data}}
-        <table class="table table-bordered table-hover">
-        <thead class="thead-dark">
-          <tr>
-            <th>Name</th>
-            <th>Info</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>{{.Name}}</td>
-            <td>
-              <span class="badge badge-secondary">ID: {{.ID}}</span></br>
-              <span class="badge badge-info">Created: {{.VersionCreatedAt}}</span></br>
-              <span class="badge badge-primary">Type: {{.Type}}</span>
-            </td>
-          </tr>
-          <tr>
-            <td colspan=2 style="padding: 0">
-            <table class="table table-bordered table-hover" style="margin-bottom: 0">
-              <thead class="thead-dark">
+          <table class="table table-bordered table-hover">
+            <thead class="text-white bg-dark">
               <tr>
-                <th colspan=2>Value</th>
+                <th>Name</th>
+                <th>Type</th>
               </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>CA</td>
-                  <td class="dont-break-out"><pre class="dont-break-out">{{.Value.CA}}</pre></td>
-                </tr>
-                <tr>
-                  <td>Certificate</td>
-                  <td class="dont-break-out"><pre class="dont-break-out">{{.Value.Certificate}}</pre></td>
-                </tr>
-                <tr>
-                  <td>Private Key</td>
-                  <td class="dont-break-out"><pre class="dont-break-out">{{.Value.PrivateKey}}</pre></td>
-                </tr>
-              </tbody>
-            </table>
-            </td>
-          </tr>
-          </tbody>
-        </table>
-        {{end}}
-        {{end}}
-        </div>
-        </div>
-        </div>
+            </thead>
+            <tbody>
+              <tr>
+                <td>{{$var.Name}}</td>
+                <td><span class="badge badge-info">{{$var.Type}}</span></td>
+              </tr>
+            </tbody>
+          </table>
+          <div id="accordion">
+{{range $index, $value := .Data }}
+            <div class="card">
+              <div class="card-header text-white bg-dark{{if ne $index 0}} collapsed{{end}}" data-toggle="collapse" data-target="#collapse{{$value.ID}}" aria-expanded="{{if eq $index 0}}true{{else}}false{{end}}" aria-controls="collapse{{$value.ID}}" id="{{$value.ID}}">
+                Created {{$value.VersionCreatedAt}} - {{$value.ID}}
+              </div>
+
+              <div id="collapse{{$value.ID}}" class="collapse{{if eq $index 0}} show{{end}}" aria-labelledby="{{$value.ID}}" data-parent="#accordion">
+                <div class="card-body" style="padding: 0">
+                  <table class="table table-bordered table-hover" style="margin-bottom: 0">
+                    <tbody>
+                      <tr>
+                        <td>CA</td>
+                        <td class="dont-break-out"><pre class="dont-break-out">{{$value.Value.CA}}</pre></td>
+                      </tr>
+                      <tr>
+                        <td>Certificate</td>
+                        <td class="dont-break-out"><pre class="dont-break-out">{{$value.Value.Certificate}}</pre></td>
+                      </tr>
+                      <tr>
+                        <td>Private Key</td>
+                        <td class="dont-break-out"><pre class="dont-break-out">{{$value.Value.PrivateKey}}</pre></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+{{end}}
+          </div>
         </div>
       </div>
-      <div class="modal-footer">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-      </div>
-  {{end}}
+    </div>
+  </div>
+</div>
+<div class="modal-footer">
+  <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Close</button>
+</div>
+{{end}}
+{{end}}
