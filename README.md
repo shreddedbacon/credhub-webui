@@ -28,6 +28,8 @@ Generate a credential
 ![generate cred](https://github.com/shreddedbacon/credhub-webui/blob/master/screenshots/05-generate_cred.png)
 View a generated credential
 ![view generated](https://github.com/shreddedbacon/credhub-webui/blob/master/screenshots/06-view_generated.png)
+Set a credential
+![set credential](https://github.com/shreddedbacon/credhub-webui/blob/master/screenshots/07-set_credential.png)
 
 # Deploy
 Use BOSH to deploy this, see [this](https://github.com/shreddedbacon/credhub-webui-boshrelease) BOSH release
