@@ -36,11 +36,11 @@
                   <table class="table table-bordered table-hover" style="margin-bottom: 0">
                     <tbody>
                       <tr>
+                        <td class="dont-break-out"><pre id="display{{.ID}}" class="dont-break-out"></pre></td>
                         <script>
                           var data = JSON.parse({{ .Value | MapToString }});
                           document.getElementById("display{{.ID}}").innerHTML = JSON.stringify(data, undefined, 2);
                         </script>
-                        <td class="dont-break-out"><pre id="display{{.ID}}" class="dont-break-out"></pre></td>
                       </tr>
                     </tbody>
                   </table>
