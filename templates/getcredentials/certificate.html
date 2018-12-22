@@ -36,11 +36,17 @@
                   <table class="table table-bordered table-hover" style="margin-bottom: 0">
                     <tbody>
                       <tr>
-                        <td>CA</td>
+                        <td>CA<hr>
+                          Common Name:<br><span class="badge badge-secondary">{{$value.Value.CA | CertCommonName}}</span><br>
+                          Expires:<br><span class="badge badge-info">{{$value.Value.CA | CertNotBefore}}</span>
+                        </td>
                         <td class="dont-break-out"><pre class="dont-break-out">{{$value.Value.CA}}</pre></td>
                       </tr>
                       <tr>
-                        <td>Certificate</td>
+                        <td>Certificate<hr>
+                          Common Name:<br><span class="badge badge-secondary">{{$value.Value.Certificate | CertCommonName}}</span><br>
+                          Expires:<br><span class="badge badge-info">{{$value.Value.Certificate | CertNotBefore}}</span>
+                        </td>
                         <td class="dont-break-out"><pre class="dont-break-out">{{$value.Value.Certificate}}</pre></td>
                       </tr>
                       <tr>
