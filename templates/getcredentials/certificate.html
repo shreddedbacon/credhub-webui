@@ -38,14 +38,14 @@
                       <tr>
                         <td>CA<hr>
                           Common Name:<br><span class="badge badge-secondary">{{$value.Value.CA | CertCommonName}}</span><br>
-                          Expires:<br><span class="badge badge-info">{{$value.Value.CA | CertNotBefore}}</span>
+                          Expires:<br><span class="badge badge-info">{{$value.Value.CA | CertNotAfter}}</span>
                         </td>
                         <td class="dont-break-out"><pre class="dont-break-out">{{$value.Value.CA}}</pre></td>
                       </tr>
                       <tr>
                         <td>Certificate<hr>
                           Common Name:<br><span class="badge badge-secondary">{{$value.Value.Certificate | CertCommonName}}</span><br>
-                          Expires:<br><span class="badge badge-info">{{$value.Value.Certificate | CertNotBefore}}</span>
+                          Expires:<br><span class="badge badge-info">{{$value.Value.Certificate | CertNotAfter}}</span>
                         </td>
                         <td class="dont-break-out"><pre class="dont-break-out">{{$value.Value.Certificate}}</pre></td>
                       </tr>

@@ -202,7 +202,7 @@ func GetCredentials(w http.ResponseWriter, r *http.Request) {
 				Flash: flash,
 			}
 			tf := template.FuncMap{
-				"CertNotBefore":  CertNotBefore,
+				"CertNotAfter":   CertNotAfter,
 				"CertCommonName": CertCommonName,
 			}
 			tmpl := template.Must(template.New("certificate.html").Funcs(tf).ParseFiles("templates/getcredentials/certificate.html"))
@@ -271,9 +271,19 @@ func MapToString(mapVal map[string]interface{}) string {
 	return string(retBytes)
 }
 
-/*
-  turn map into string for json display in view
-*/
+func CertNotAfter(certificate string) string {
+	block, _ := pem.Decode([]byte(certificate))
+	if block == nil {
+		return "failed to parse certificate PEM"
+	}
+	cert, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		return "failed to parse certificate: " + err.Error()
+	}
+	retString := strings.Replace(cert.NotAfter.String(), "+0000", "", 2) //strip out +0000 from the string to save space
+	return retString
+}
+
 func CertNotBefore(certificate string) string {
 	block, _ := pem.Decode([]byte(certificate))
 	if block == nil {
