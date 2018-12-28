@@ -18,6 +18,6 @@ echo ">> Build"
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o built-release/credhub-webui github.com/shreddedbacon/credhub-webui
 
 echo ">> Create artifact"
-cd built-release
 VERSION=$(cat ${VERSION_FROM})
+cd built-release
 tar czf credhub-webui-linux-$VERSION.tar.gz credhub-webui
