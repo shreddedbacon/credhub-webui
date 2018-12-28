@@ -1,0 +1,12 @@
+github:
+  private_key: ((credhubwebui_ssh.private_key))
+  uri: git@github.com:shreddedbacon/credhub-webui.git
+  branch: master
+  user: shreddedbacon
+  repository: credhub-webui
+  access_token: ((github_api_token))
+
+aws:
+  access_key: ((credhubwebui_minio.username))
+  secret_key: ((credhubwebui_minio.password))
+  endpoint: ((credhubwebui_minio_endpoint))
