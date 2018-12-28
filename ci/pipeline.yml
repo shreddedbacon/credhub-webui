@@ -82,7 +82,7 @@ jobs:
           platform: linux
           image_resource:
             type: docker-image
-            source: {repository: alpine/git}
+            source: {repository: alpine }
           inputs:
             - name: version
             - name: credhub-webui-release
@@ -91,14 +91,35 @@ jobs:
             - name: gh
             - name: pushme
           run:
-            path: ./credhub-webui/ci/scripts/release.sh
-            args: []
+            path: sh
+            args:
+              - -c
+              - |
+                echo ">> Install git"
+                apk add --no-cache git
+                sh credhub-webui-release/ci/scripts/release.sh
           params:
             VERSION_FROM: version/number
             GITHUB_OWNER: ((github.user))
             GITHUB_REPO:  ((github.repository))
             BRANCH:       ((github.branch))
-
+      - name: release
+        task: release
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source: {repository: alpine}
+          inputs:
+            - name: gh
+            - name: pushme
+          run:
+            path: sh
+            args:
+              - -c
+              - |
+                ls gh/**/*
+                ls pushme/**/*
       - name: upload-git
         put: credhub-webui-release
         params:
