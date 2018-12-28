@@ -19,4 +19,5 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o built-release/credhub-webui
 
 echo ">> Create artifact"
 cd built-release
-tar czf credhub-webui-linux-$VERSION_FROM.tar.gz credhub-webui
+VERSION=$(cat ${VERSION_FROM})
+tar czf credhub-webui-linux-$VERSION.tar.gz credhub-webui
