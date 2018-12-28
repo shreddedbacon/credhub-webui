@@ -2,11 +2,14 @@ package main
 
 import (
 	"bytes"
+	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"html/template"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -198,7 +201,11 @@ func GetCredentials(w http.ResponseWriter, r *http.Request) {
 				},
 				Flash: flash,
 			}
-			tmpl := template.Must(template.ParseFiles("templates/getcredentials/certificate.html"))
+			tf := template.FuncMap{
+				"CertNotAfter":   CertNotAfter,
+				"CertCommonName": CertCommonName,
+			}
+			tmpl := template.Must(template.New("certificate.html").Funcs(tf).ParseFiles("templates/getcredentials/certificate.html"))
 			tmpl.ExecuteTemplate(w, "base", data)
 			return
 		case "user":
@@ -262,4 +269,42 @@ func GetCredentials(w http.ResponseWriter, r *http.Request) {
 func MapToString(mapVal map[string]interface{}) string {
 	retBytes, _ := json.Marshal(mapVal)
 	return string(retBytes)
+}
+
+func CertNotAfter(certificate string) string {
+	block, _ := pem.Decode([]byte(certificate))
+	if block == nil {
+		return "failed to parse certificate PEM"
+	}
+	cert, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		return "failed to parse certificate: " + err.Error()
+	}
+	retString := strings.Replace(cert.NotAfter.String(), "+0000", "", 2) //strip out +0000 from the string to save space
+	return retString
+}
+
+func CertNotBefore(certificate string) string {
+	block, _ := pem.Decode([]byte(certificate))
+	if block == nil {
+		return "failed to parse certificate PEM"
+	}
+	cert, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		return "failed to parse certificate: " + err.Error()
+	}
+	retString := strings.Replace(cert.NotBefore.String(), "+0000", "", 2) //strip out +0000 from the string to save space
+	return retString
+}
+
+func CertCommonName(certificate string) string {
+	block, _ := pem.Decode([]byte(certificate))
+	if block == nil {
+		return "failed to parse certificate PEM"
+	}
+	cert, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		return "failed to parse certificate: " + err.Error()
+	}
+	return cert.Subject.CommonName
 }
