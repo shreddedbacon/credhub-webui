@@ -19,6 +19,7 @@ type LoginStruct struct {
 	Flash       Flash
 	CallbackUrl string
 	AuthUrl     string
+  clientID    string
 }
 
 type Flash struct {
@@ -71,6 +72,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			CallbackUrl: uiUrl,
 			AuthUrl:     oAuthServer,
 			Flash:       flash,
+      ClientID:    clientID,
 		}
 		tmpl.Execute(w, response)
 		return
@@ -119,6 +121,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 				Flash:       flash,
 				CallbackUrl: uiUrl,
 				AuthUrl:     oAuthServer,
+        ClientID:    clientID,
 			}
 			tmpl.Execute(w, response)
 		}
@@ -126,6 +129,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			Success:     true,
 			CallbackUrl: uiUrl,
 			AuthUrl:     oAuthServer,
+      ClientID:    clientID,
 		}
 		tmpl.Execute(w, response)
 	}
@@ -136,6 +140,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			Flash:       flash,
 			CallbackUrl: uiUrl,
 			AuthUrl:     oAuthServer,
+      ClientID:    clientID,
 		}
 		tmpl.Execute(w, response)
 	} else {
