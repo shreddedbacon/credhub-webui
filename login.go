@@ -19,7 +19,7 @@ type LoginStruct struct {
 	Flash       Flash
 	CallbackUrl string
 	AuthUrl     string
-  clientID    string
+  ClientID    string
 }
 
 type Flash struct {
