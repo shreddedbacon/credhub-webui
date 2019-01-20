@@ -1,3 +1,5 @@
+initial_version: 0.0.4-rc1
+
 github:
   private_key: ((credhubwebui_ssh.private_key))
   uri: git@github.com:shreddedbacon/credhub-webui.git
