@@ -35,6 +35,7 @@
                 <div class="card-body" style="padding: 0">
                   <table class="table table-bordered table-hover" style="margin-bottom: 0">
                     <tbody>
+                      {{ if $value.Value.CA }}
                       <tr>
                         <td>CA<hr>
                           Common Name:<br><span class="badge badge-secondary">{{$value.Value.CA | CertCommonName}}</span><br>
@@ -42,6 +43,7 @@
                         </td>
                         <td class="dont-break-out"><pre class="dont-break-out">{{$value.Value.CA}}</pre></td>
                       </tr>
+                      {{ end }}
                       <tr>
                         <td>Certificate<hr>
                           Common Name:<br><span class="badge badge-secondary">{{$value.Value.Certificate | CertCommonName}}</span><br>
