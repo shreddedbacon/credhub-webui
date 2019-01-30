@@ -74,14 +74,14 @@
       {{.Flash.Message}}
     </div>
     {{- end -}}
-    <a href="{{.AuthUrl}}/oauth/authorize?response_type=code&client_id={{.ClientID}}&redirect_uri={{.CallbackUrl}}/login/callback" class="btn btn-lg btn-primary btn-block">OAuth Sign In</a>
+    <a href="{{.AuthUrl}}/oauth/authorize?response_type=code&client_id={{.ClientID}}&redirect_uri={{.CallbackUrl}}/login/callback" class="btn btn-lg btn-dark btn-block">OAuth Sign In</a>
     <hr>
     <h3 class="h5 mb-3 font-weight-normal">Use Client Credentials</h3>
     <label for="clientid" class="sr-only">Client ID</label>
     <input type="text" name="clientid" id="clientid" class="form-control" placeholder="Client ID" required autofocus>
 		<label for="clientsecret" class="sr-only">Client Secret</label>
     <input type="password" name="clientsecret" id="clientsecret" class="form-control" placeholder="Client Secret" required>
-		<button class="btn btn-lg btn-primary btn-block" type="submit">Client Sign In</button>
+		<button class="btn btn-lg btn-dark btn-block" type="submit">Client Sign In</button>
 	</form>
 {{end}}
 <!-- jQuery first, then Popper.js, then Bootstrap JS -->
