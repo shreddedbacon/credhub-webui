@@ -9,7 +9,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o credhub-webui .
 # actual container
 FROM alpine:3.7
 RUN apk --no-cache add ca-certificates openssl
-WORKDIR /root/
+WORKDIR /app/
 # generate self signed for testing
 RUN openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=localhost"  -keyout server.key  -out server.crt
 # bring the actual executable from the builder
