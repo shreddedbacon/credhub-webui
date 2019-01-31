@@ -159,7 +159,7 @@ func GetSession(w http.ResponseWriter, r *http.Request, sessionCookie string) *s
 	return session
 }
 
-func AddFlash(w http.ResponseWriter, r *http.Request, flashMessage string, flashType string) {
+func AddFlash(w http.ResponseWriter, r *http.Request, flashMessage string, flashType template.JS) {
 	flashsession := GetSession(w, r, "flash-cookie")
 	flash := Flash{
 		Type:    flashType,
@@ -170,7 +170,7 @@ func AddFlash(w http.ResponseWriter, r *http.Request, flashMessage string, flash
 	flashsession.Save(r, w)
 }
 
-func CheckError(w http.ResponseWriter, r *http.Request, responseBody []byte, defaultFlashMessage string, defaultFlashType string) {
+func CheckError(w http.ResponseWriter, r *http.Request, responseBody []byte, defaultFlashMessage string, defaultFlashType template.JS) {
 	var rawJson map[string]interface{}
 	json.Unmarshal(responseBody, &rawJson)
 	for a, b := range rawJson {

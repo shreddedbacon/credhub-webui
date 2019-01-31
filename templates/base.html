@@ -13,6 +13,12 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <!-- Custom styles for this template -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/dataTables.bootstrap4.min.css">
+    <link href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" id="fontawesome-css" rel="stylesheet" type="text/css">
+    <script src="https://sciactive.github.io/pnotify/lib/iife/PNotify.js"></script><link href="https://sciactive.github.io/pnotify/dist/PNotifyBrightTheme.css" rel="stylesheet" type="text/css" />
+    <script>
+    PNotify.defaults.icons = 'fontawesome5';
+    PNotify.defaults.styling = 'bootstrap4';
+    </script>
     <style>
       .page-link {
         color: #343a40;
@@ -106,12 +112,11 @@
 
     <main role="main" class="container-fluid">
       {{- if .Flash.Display -}}
-      <div class="alert alert-{{.Flash.Type}} alert-dismissible fade show" role="alert">
-        {{.Flash.Message}}
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
+      <script>
+      PNotify.{{.Flash.Type}}({
+        text: '{{.Flash.Message}}'
+      });
+      </script>
       {{- end -}}
       {{template "content" .}}
     </main><!-- /.container -->

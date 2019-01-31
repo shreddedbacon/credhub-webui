@@ -23,7 +23,7 @@ type LoginStruct struct {
 }
 
 type Flash struct {
-	Type    string
+	Type    template.JS
 	Message string
 	Display bool
 }
