@@ -20,6 +20,7 @@ type LoginStruct struct {
 	CallbackUrl string
 	AuthUrl     string
   ClientID    string
+	CustomName	string `json:"custom_name,ommitempty"`
 }
 
 type Flash struct {
@@ -65,7 +66,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		RedirectHome(w, r) //FIX go to login and display error
 		return
 	}
-
 	//if not authd and not a POST, render tmpl
 	if r.Method != http.MethodPost {
 		response := LoginStruct{
@@ -73,6 +73,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			AuthUrl:     oAuthServer,
 			Flash:       flash,
       ClientID:    clientID,
+			CustomName:  customName,
 		}
 		tmpl.Execute(w, response)
 		return
@@ -122,6 +123,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 				CallbackUrl: uiUrl,
 				AuthUrl:     oAuthServer,
         ClientID:    clientID,
+				CustomName:  customName,
 			}
 			tmpl.Execute(w, response)
 		}
@@ -130,6 +132,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			CallbackUrl: uiUrl,
 			AuthUrl:     oAuthServer,
       ClientID:    clientID,
+			CustomName:  customName,
 		}
 		tmpl.Execute(w, response)
 	}
@@ -141,6 +144,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			CallbackUrl: uiUrl,
 			AuthUrl:     oAuthServer,
       ClientID:    clientID,
+			CustomName:  customName,
 		}
 		tmpl.Execute(w, response)
 	} else {

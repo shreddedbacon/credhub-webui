@@ -50,6 +50,7 @@ var (
 	clientID      = os.Getenv("CLIENT_ID")
 	clientSecret  = os.Getenv("CLIENT_SECRET")
 	uiUrl         = os.Getenv("UI_URL") //used for callback url
+	customName    = os.Getenv("DISPLAY_CUSTOM_NAME") // display a custom name on login page
 )
 
 type CredentialsData struct {
@@ -228,6 +229,7 @@ func main() {
 	clientIDVar := flag.String("client-id", "", "Client ID that has credhub.read and credhub.write authorization")
 	clientSecretVar := flag.String("client-secret", "", "Secret for the Client ID")
 	uiUrlVar := flag.String("ui-url", "", "URL of this UI (https://<ip-or-host>:<port>)")
+	customNameVar := flag.String("custom-name", "", "a custom name to display on login page")
 	flag.Parse()
 	if len(os.Getenv("CREDHUB_SERVER")) == 0 {
 		if *credhubServerVar != "" {
@@ -286,6 +288,13 @@ func main() {
 			uiUrl = *uiUrlVar
 		} else {
 			log.Fatalln("UI_URL not set")
+		}
+	}
+	if len(os.Getenv("DISPLAY_CUSTOM_NAME")) == 0 {
+		if *customNameVar != "" {
+			customName = *customNameVar
+		} else {
+			customName = "" //allow custom name
 		}
 	}
 
