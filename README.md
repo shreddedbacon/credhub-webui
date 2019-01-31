@@ -5,6 +5,9 @@ A web interface for performing basic functions with CredHub.
 ## Log in
 You need to log in with valid Credentials
 Currently supports:
+* OAuth via UAA
+
+OR
 * `client_id`
 * `client_secret`
 
@@ -42,22 +45,30 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o credhub-webui .
 
 # Run
 ```
-./credhub-webui -ui-ssl-cert server.crt \
+./credhub-webui \
+  -ui-ssl-cert server.crt \
   -ui-ssl-key server.key \
   -cookie-key "super-secret-key" \
   -cookie-name "auth-cookie" \
   -credhub-server "https://192.168.50.6:8844" \
   -ui-url "https://localhost:8443" \
   -client-id "credhub" \
-  -client-secret "credhubsecret"
+  -client-secret "credhubsecret" \
+  -custom-name "XYZ Credhub"
 ```
 
 # Docker
 ## Build
+### Docker
 ```
-docker build -t shreddedbacon/credhub-webui .
+make build-docker
+```
+### Docker compose
+```
+make build
 ```
 ## Run
+### Docker
 ```
 docker run -p 8443:8443 \
   -e CLIENT_ID=credhub \
@@ -75,14 +86,17 @@ docker run -p 8443:8443 \
   -e CREDHUB_SERVER=https://192.168.50.6:8844 \
   shreddedbacon/credhub-webui
 ```
+### Docker compose
+```
+cp .envvars-example .envvars
+vi .envvars # edit with your requirements
+make run
+```
 
 # Access
-
 ```
 https://localhost:8443
 ```
-
-
 
 # UAA Ops
 ```
