@@ -316,6 +316,7 @@ func main() {
 	r.HandleFunc("/delete", ValidateToken(DeleteCredentials))
 	r.HandleFunc("/generate/{credtype}", ValidateToken(GenerateCredentials))
 	r.HandleFunc("/set/{credtype}", ValidateToken(SetCredentials))
+	r.HandleFunc("/edit", ValidateToken(EditCredentials))
 	r.HandleFunc("/favicon.ico", FaviconHandler)
 	r.HandleFunc("/", ValidateToken(ListCredentials))
 

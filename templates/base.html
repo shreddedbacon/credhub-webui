@@ -113,7 +113,12 @@
     <main role="main" class="container-fluid">
       {{- if .Flash.Display -}}
       <script>
-      PNotify.{{.Flash.Type}}({
+      var flashtype = '{{ .Flash.Type }}';
+      if (flashtype == "danger") {
+        flashtype = 'error';
+      }
+      PNotify.alert({
+        type: flashtype,
         text: '{{.Flash.Message}}'
       });
       </script>
@@ -121,7 +126,7 @@
       {{template "content" .}}
     </main><!-- /.container -->
     <div class="modal fade" id="generate-modal">
-      <div class="modal-dialog">
+      <div class="modal-dialog modal-lg">
         <div class="modal-content gen-modal">
         </div>
       </div>
@@ -146,7 +151,9 @@
     <script src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js"></script>
     <script>
     $(document).ready(function () {
-      $('#credentials').DataTable();
+      $('#credentials').DataTable( {
+        "order": [[ 2, "desc" ]]
+      });
       $('#confirm-delete').on('show.bs.modal', function(e) {
         $(this).find('.btn-ok').attr('href', $(e.relatedTarget).data('href'));
       });
