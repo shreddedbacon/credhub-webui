@@ -142,6 +142,7 @@ resource_types:
 resources:
   - name: credhub-webui-release
     type: git
+    check_every: 15m
     source:
       uri:         ((github.uri))
       branch:      ((github.branch))
@@ -149,7 +150,7 @@ resources:
 
   - name: github-release
     type: github-release
-    every: 15m
+    check_every: 15m
     source:
       user:         ((github.user))
       repository:   ((github.repository))
