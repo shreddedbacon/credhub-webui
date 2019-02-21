@@ -57,7 +57,7 @@ func SetCredentials(w http.ResponseWriter, r *http.Request) {
 		case "password":
 			credName := r.FormValue("name")
 			r.ParseForm()
-			value := strings.Join(r.Form["value"], "")
+			value := strings.Join(r.Form["password"], "")
 			//create payload
 			setValue := SetCredentialValueStruct{
 				Name:  credName,

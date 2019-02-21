@@ -1,0 +1,51 @@
+{{define "base"}}
+{{$pagetitle := .PageTitle}}
+{{range .Credentials}}
+{{$var := index .Data 0}}
+<div class="modal-header bg-info text-white">
+  {{$pagetitle}}
+</div>
+<div class="modal-body">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="panel-body">
+        <div class="table-responsive fixed-table-body">
+          <table class="table table-bordered table-hover">
+            <thead class="text-white bg-dark">
+              <tr>
+                <th>Name</th>
+                <th>Type</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>{{$var.Name}}</td>
+                <td><span class="badge badge-info">{{$var.Type}}</span></td>
+              </tr>
+            </tbody>
+          </table>
+          <div id="accordion">
+{{range $index, $value := .Data }}
+            <div class="card">
+              <div class="card-header text-white bg-dark{{if ne $index 0}} collapsed{{end}}" data-toggle="collapse" data-target="#collapse{{$value.ID}}" aria-expanded="{{if eq $index 0}}true{{else}}false{{end}}" aria-controls="collapse{{$value.ID}}" id="{{$value.ID}}">
+                Created {{$value.VersionCreatedAt}} - {{$value.ID}}
+              </div>
+
+              <div id="collapse{{$value.ID}}" class="collapse{{if eq $index 0}} show{{end}}" aria-labelledby="{{$value.ID}}" data-parent="#accordion">
+                <div class="card-body">
+                  <pre class="dont-break-out">{{$value.Value}}</pre>
+                </div>
+              </div>
+            </div>
+{{end}}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-footer">
+  <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Close</button>
+</div>
+{{end}}
+{{end}}

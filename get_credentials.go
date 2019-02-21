@@ -241,6 +241,21 @@ func GetCredentials(w http.ResponseWriter, r *http.Request) {
 			tmpl := template.Must(template.New("json.html").Funcs(tf).ParseFiles("templates/getcredentials/json.html"))
 			tmpl.ExecuteTemplate(w, "base", data3)
 			return
+		case "password":
+			credRespdata := GetCredentialData{}
+			if credServErr := json.Unmarshal([]byte(credRespBytes), &credRespdata); credServErr != nil {
+				fmt.Println(credServErr)
+			}
+			data := GetCredentialPageData{
+				PageTitle: "Password Credential",
+				Credentials: []GetCredentialData{
+					credRespdata,
+				},
+				Flash: flash,
+			}
+			tmpl := template.Must(template.ParseFiles("templates/getcredentials/password.html"))
+			tmpl.ExecuteTemplate(w, "base", data)
+			return
 		default:
 			credRespdata := GetCredentialData{}
 			if credServErr := json.Unmarshal([]byte(credRespBytes), &credRespdata); credServErr != nil {
@@ -253,7 +268,7 @@ func GetCredentials(w http.ResponseWriter, r *http.Request) {
 				},
 				Flash: flash,
 			}
-			tmpl := template.Must(template.ParseFiles("templates/getcredentials/credential.html"))
+			tmpl := template.Must(template.ParseFiles("templates/getcredentials/value.html"))
 			tmpl.ExecuteTemplate(w, "base", data)
 			return
 		}
