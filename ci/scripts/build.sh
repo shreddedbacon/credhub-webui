@@ -9,7 +9,7 @@ apk add --no-cache git
 echo ">> Setup Directories"
 mkdir -p /go/src/github.com/shreddedbacon/
 ln -s $PWD/credhub-webui-release /go/src/github.com/shreddedbacon/credhub-webui
-ls -alh /go/src/github.com/shreddedbacon
+ls -alh /go/src/github.com/shreddedbacon/credhub-webui
 cd  /go/src/github.com/shreddedbacon/credhub-webui
 echo ">> Get"
 go get -v .
