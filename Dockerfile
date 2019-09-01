@@ -24,4 +24,5 @@ ENV UI_SSL_CERT=server.crt
 ENV UI_SSL_KEY=server.key
 ENV COOKIE_KEY="super-secret-key"
 ENV COOKIE_NAME="auth-cookie"
+ENV UI_PORT="8443"
 ENTRYPOINT ["./credhub-webui"]
