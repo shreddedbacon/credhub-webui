@@ -52,6 +52,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o credhub-webui .
   -cookie-name "auth-cookie" \
   -credhub-server "https://192.168.50.6:8844" \
   -ui-url "https://localhost:8443" \
+  -ui-port "8443" \
   -client-id "credhub" \
   -client-secret "credhubsecret" \
   -custom-name "XYZ Credhub"
@@ -74,6 +75,7 @@ docker run -p 8443:8443 \
   -e CLIENT_ID=credhub \
   -e CLIENT_SECRET=credhubsecret \
   -e UI_URL=https://localhost:8443 \
+  -e UI_PORT=8443 \
   -e CREDHUB_SERVER=https://<ip>:<port> \
   shreddedbacon/credhub-webui
 ```
@@ -83,6 +85,7 @@ docker run -p 8443:8443 \
   -e CLIENT_ID=credhub \
   -e CLIENT_SECRET=credhubsecret \
   -e UI_URL=https://localhost:8443 \
+  -e UI_PORT=8443 \
   -e CREDHUB_SERVER=https://192.168.50.6:8844 \
   shreddedbacon/credhub-webui
 ```

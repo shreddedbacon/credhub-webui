@@ -3,3 +3,5 @@ CLIENT_SECRET=credhub_admin_secret
 UI_URL=https://localhost:8443
 CREDHUB_SERVER=https://192.168.50.6:8844
 COOKIE_NAME=credhubui
+COOKIE_KEY=credhubui
+UI_PORT=8443
