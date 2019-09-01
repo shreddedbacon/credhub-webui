@@ -1,14 +1,16 @@
-initial_version: 0.0.4-rc1
+initial_version: 0.0.5
+
+public: false
 
 github:
-  private_key: ((credhubwebui_ssh.private_key))
   uri: git@github.com:shreddedbacon/credhub-webui.git
   branch: master
   user: shreddedbacon
   repository: credhub-webui
-  access_token: ((github_api_token))
+  access_token: ((github.access_token))
+  private_key: ((github.private_key))
 
 aws:
-  access_key: ((credhubwebui_minio.username))
-  secret_key: ((credhubwebui_minio.password))
-  endpoint: ((credhubwebui_minio_endpoint))
+  access_key: ((aws.access_key))
+  secret_key: ((aws.secret_key))
+  endpoint: ((aws.endpoint))
